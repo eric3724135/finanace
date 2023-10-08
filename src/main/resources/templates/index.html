@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<style type="text/css">
+    label {
+        display: inline-block;
+        width: 400px;
+        margin: 5px;
+        text-align: left;
+    }
+
+    input[type=text], input[type=password], select {
+        display: inline-block;
+        width: 200px;
+    }
+
+    input[type=radio] {
+        margin-left: 45px;
+    }
+
+    input[type=checkbox] {
+        margin-right: 190px;
+    }
+
+    button {
+        padding: 5px;
+        margin: 10px;
+    }
+
+    span{
+        text-align: left;
+    }
+</style>
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div align="center">
+    <h1>RSI 計算</h1>
+    <form action="#" th:action="@{/}" method="post" th:object="${rsiResult}">
+        <label>請輸入查詢對象台股請填1,美股(未實作)請填2 :</label>
+        <input type="text" th:field="*{stockType}"/><br/>
+
+        <label>請輸入股票代碼：</label>
+        <input type="text" th:field="*{symbol}"/><br/>
+
+        <label>請輸入預測類型,RSI請填1,股價請填2:</label>
+        <input type="text" th:field="*{futureType}"/><br/>
+
+        <label>請輸入預測參數,類型1請填股價,類型2請填RSI:</label>
+        <input type="text" th:field="*{futureParam}"/><br/>
+
+        <button type="submit">計算</button>
+    </form>
+</div>
+<div align="center">
+
+    <span th:text="${rsiResult.pastDateStr}"/>
+    <span> [股價] ：</span>
+    <span th:text="${rsiResult.pastClose}"/>
+    <span> ,[RSI] ：</span>
+    <span th:text="${#numbers.formatDecimal(rsiResult.pastRsi,0,2)}"/>
+    <span> ,[Ma120] ：</span>
+    <span th:text="${rsiResult.pastMa120}"/>
+    <br/>
+    <span th:text="${rsiResult.currentDateStr}"/>
+    <span> [股價] ：</span>
+    <span th:text="${rsiResult.currentClose}"/>
+    <span> ,[RSI] ：</span>
+    <span th:text="${#numbers.formatDecimal(rsiResult.currentRsi,0,2)}"/>
+    <span> ,[Ma120] ：</span>
+    <span th:text="${rsiResult.currentMa120}"/>
+    <br/>
+    <span> 預測參數 </span>
+    <span th:text="${rsiResult.futureParam}"/>
+    <span> 預測結果 </span>
+    <span th:text="${#numbers.formatDecimal(rsiResult.futureResult,0,2)}"/><br/>
+
+</div>
+</body>
+</html>
