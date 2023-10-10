@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<h1>Quote 查詢</h1>
+<form action="#" th:action="@{/quote}" method="post" th:object="${symbol}">
+    <label>請輸入股票代碼 :</label>
+    <input type="text" th:field="*{id}"/><br/>
+    <button type="submit">查詢</button>
+</form>
+
+<div >
+    <table >
+        <colgroup>
+            <col width="100px">
+            <col width="100px">
+            <col width="100px">
+            <col width="100px">
+            <col width="100px">
+        </colgroup>
+        <thead>
+        <tr>
+            <th> 日期</th>
+            <th> 收盤價</th>
+            <th> 開盤價</th>
+            <th> 最高價</th>
+            <th> 最低價</th>
+            <th> RSI6</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:if="${quotes.empty}">
+            <td colspan="2"> 無資料</td>
+        </tr>
+        <tr th:each="quote : ${quotes}">
+
+            <td th:text="${#temporals.format(quote.tradeDate, 'yyyy-MM-dd')}"></td>
+            <td th:text="${quote.close}" align="center"></td>
+            <td th:text="${quote.open}"  align="center"></td>
+            <td th:text="${quote.high}"  align="center"></td>
+            <td th:text="${quote.low}"  align="center"</td>
+            <td th:text="${#numbers.formatDecimal(quote.rsi5,0,2)}"  align="center"></td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+</body>
+</html>
