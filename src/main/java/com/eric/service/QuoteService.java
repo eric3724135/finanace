@@ -4,13 +4,13 @@ import com.eric.domain.*;
 import com.eric.histock.HiStockDataHandler;
 import com.eric.parser.ParserResult;
 import com.eric.yahoo.YahooUSQuoteParser;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 @Service
+@Slf4j
 public class QuoteService {
 
     public List<CMQuote> getQuotes(Symbol symbol) {

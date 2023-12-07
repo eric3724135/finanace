@@ -7,20 +7,19 @@ import java.util.Map;
 
 @Getter
 public enum SymbolType {
-    STOCK_EXCHANGE(1, "上市"),
-    OVER_THE_COUNTER(2, "上櫃"),
-    EMERGING_STOCK(3, "興櫃");
+    TWE("0", "台股"),
+    US("1", "美股");
 
-    private int code;
+    private String code;
 
     private String desc;
 
-    SymbolType(int code, String desc) {
+    SymbolType(String code, String desc) {
         this.code = code;
         this.desc = desc;
     }
 
-    private static Map<Integer, SymbolType> map = new HashMap<>();
+    private static Map<String, SymbolType> map = new HashMap<>();
 
     static {
         for (SymbolType key : SymbolType.values())
