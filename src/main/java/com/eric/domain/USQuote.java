@@ -3,6 +3,7 @@ package com.eric.domain;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
@@ -22,7 +23,7 @@ public class USQuote {
     /**
      * tradeDate
      */
-    private LocalDateTime tradeDate;
+    private LocalDate tradeDate;
     /**
      * open
      */

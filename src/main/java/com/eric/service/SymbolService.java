@@ -1,6 +1,7 @@
 package com.eric.service;
 
 import com.eric.domain.Symbol;
+import com.eric.domain.SymbolType;
 import com.eric.histock.HiStockSymbolParser;
 import com.eric.mdj.MDJUsSymbolParser;
 import com.eric.parser.ParserResult;
@@ -27,17 +28,21 @@ public class SymbolService {
         return result.getResultList();
     }
 
+    public List<SymbolDto> getSymbolsFromLocal(SymbolType type) {
+        return symbolRepository.findByType(type.getCode());
+    }
+
     public List<Symbol> getUSSymbols() {
         MDJUsSymbolParser parser = new MDJUsSymbolParser();
         ParserResult<Symbol> result = parser.getResult();
         return result.getResultList();
     }
 
-    public boolean existTWESymbol(){
+    public boolean existTWESymbol() {
         return symbolRepository.existsById("2330");
     }
 
-    public boolean existUSSymbol(){
+    public boolean existUSSymbol() {
         return symbolRepository.existsById("AAPL");
     }
 

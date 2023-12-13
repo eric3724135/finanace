@@ -1,5 +1,7 @@
 package com.eric.persist.pojo;
 
+import com.eric.domain.Symbol;
+import com.eric.domain.SymbolType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -29,5 +31,11 @@ public class SymbolDto {
         this.id = id;
         this.name = name;
         this.type = type;
+    }
+
+    public Symbol getSymbolObj(){
+        Symbol symbol = new Symbol(id,name);
+        symbol.setType(SymbolType.getByCode(type));
+        return symbol;
     }
 }

@@ -1,7 +1,6 @@
 package com.eric.controller;
 
 import com.eric.domain.Quote;
-import com.eric.domain.SymbolCounter;
 import com.eric.domain.SymbolType;
 import com.eric.persist.pojo.SymbolDto;
 import com.eric.service.QuoteService;
@@ -16,16 +15,14 @@ import org.springframework.web.bind.annotation.PostMapping;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalUnit;
 import java.util.List;
 
 import static com.eric.domain.SymbolCounter.symbolCnt;
-
 import static com.eric.domain.SymbolCounter.symbolSize;
 
 @Slf4j
 @Controller
-public class SymbolController {
+public class QuoteController {
 
     @Autowired
     private SymbolService symbolService;

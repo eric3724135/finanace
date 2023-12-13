@@ -31,14 +31,14 @@ public class RsiResult {
 
     private double futureResult;
 
-    public void setPast(CMQuote quote){
+    public void setPast(Quote quote){
         currentClose = quote.getClose();
         currentRsi = quote.getRsi5();
         currentDateStr = quote.getSimpleTradeDateStr();
         currentMa120 = quote.getMa120();
     }
 
-    public void setCurrent(CMQuote quote){
+    public void setCurrent(Quote quote){
         pastClose = quote.getClose();
         pastRsi = quote.getRsi5();
         pastDateStr = quote.getSimpleTradeDateStr();

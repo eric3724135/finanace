@@ -1,6 +1,6 @@
 package com.eric.yahoo;
 
-import com.eric.domain.CMQuote;
+import com.eric.domain.Quote;
 import com.eric.domain.Period;
 import com.eric.domain.Symbol;
 import com.eric.parser.ParserError;
@@ -20,14 +20,14 @@ import java.time.ZonedDateTime;
 import java.util.*;
 
 @Slf4j
-public class YaStockDataParser extends YahooAbstractParser<CMQuote> {
+public class YaStockDataParser extends YahooAbstractParser<Quote> {
     public YaStockDataParser(Symbol symbol, Period period) {
         super(symbol, period);
     }
 
     @Override
-    public ParserResult<CMQuote> getResult() {
-        ParserResult<CMQuote> result = new ParserResult<>();
+    public ParserResult<Quote> getResult() {
+        ParserResult<Quote> result = new ParserResult<>();
         String jsonStr = "";
         try {
             //金鑰跟header "Refer"ˊ值有相關
@@ -44,16 +44,16 @@ public class YaStockDataParser extends YahooAbstractParser<CMQuote> {
             }
             if (arrNode.isArray()) {
                 for (JsonNode node : arrNode) {
-                    CMQuote data = CMQuote.ofFromYahoo(this.getSymbol(), this.getPeriod(), node);
+                    Quote data = Quote.ofFromYahoo(this.getSymbol(), this.getPeriod(), node);
                     if (data != null) {
                         result.getResultList().add(data);
                     }
                 }
             }
 
-            Set<CMQuote> set = new HashSet<>(result.getResultList());
-            List<CMQuote> list = new ArrayList<>(set);
-            list.sort(Comparator.comparing(CMQuote::getTradeDate));
+            Set<Quote> set = new HashSet<>(result.getResultList());
+            List<Quote> list = new ArrayList<>(set);
+            list.sort(Comparator.comparing(Quote::getTradeDate));
             result.setResultList(list);
 //            this.handleKD(list);
 
@@ -71,18 +71,18 @@ public class YaStockDataParser extends YahooAbstractParser<CMQuote> {
     }
 
 
-    private void handleKD(List<CMQuote> quotes) {
+    private void handleKD(List<Quote> quotes) {
         DecimalFormat df = new DecimalFormat("##.00");
         for (int i = 8; i < quotes.size(); i++) {
-            CMQuote quote = quotes.get(i);
+            Quote quote = quotes.get(i);
             if (i == 8) {
                 quote.setK9(50);
                 quote.setD9(50);
             } else {
                 BarSeries series = new BaseBarSeriesBuilder().withName(getSymbol().getId()).build();
                 for (int j = 9; j >= 0; j--) {
-                    CMQuote refQuote = quotes.get(i - j);
-                    series.addBar(ZonedDateTime.of(refQuote.getTradeDate(), ZoneId.systemDefault()), refQuote.getOpen(), refQuote.getHigh(), refQuote.getLow(), refQuote.getClose(), refQuote.getVolume());
+                    Quote refQuote = quotes.get(i - j);
+                    series.addBar(ZonedDateTime.of(refQuote.getTradeDate().atStartOfDay(), ZoneId.systemDefault()), refQuote.getOpen(), refQuote.getHigh(), refQuote.getLow(), refQuote.getClose(), refQuote.getVolume());
                 }
                 StochasticOscillatorKIndicator kIndicator = new StochasticOscillatorKIndicator(series, 10);
                 double rsv = kIndicator.getValue(9).doubleValue();

@@ -1,6 +1,6 @@
 package com.eric.controller;
 
-import com.eric.domain.CMQuote;
+import com.eric.domain.Quote;
 import com.eric.domain.Period;
 import com.eric.domain.RsiResult;
 import com.eric.domain.Symbol;
@@ -11,7 +11,6 @@ import com.eric.service.QuoteService;
 import com.eric.utils.RsiUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.stereotype.Service;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
@@ -50,12 +49,12 @@ public class RsiController {
         if ("1".equals(result.getStockType())) {
             //台股
             HiStockDataHandler parser = new HiStockDataHandler(new Symbol(result.getSymbol(), ""), Period.ONE_DAY, 10);
-            ParserResult<CMQuote> quoteResult = parser.getResult();
+            ParserResult<Quote> quoteResult = parser.getResult();
             if (quoteResult.getResultList() != null && quoteResult.getResultList().size() > 1) {
-                List<CMQuote> quotes = quoteResult.getResultList();
+                List<Quote> quotes = quoteResult.getResultList();
                 Collections.sort(quotes, (o1, o2) -> o2.getTradeDate().compareTo(o1.getTradeDate()));
-                CMQuote current = quotes.get(0);
-                CMQuote past = quotes.get(1);
+                Quote current = quotes.get(0);
+                Quote past = quotes.get(1);
                 double resultValue = RsiUtils.calc(6, past.getClose(), current.getClose(), past.getRsi5(), current.getRsi5(), result.getFutureParam(), "1".equals(result.getFutureType()));
 
                 result.setPast(past);
@@ -82,8 +81,8 @@ public class RsiController {
 
     @GetMapping("/quotes")
     @ResponseBody
-    public List<CMQuote> showQuotes(@RequestParam String symbol) {
-        List<CMQuote> quotes = quoteService.getQuotes(new Symbol(symbol, ""));
+    public List<Quote> showQuotes(@RequestParam String symbol) {
+        List<Quote> quotes = quoteService.getQuotesFromSite(new Symbol(symbol, ""));
 
         return quotes;
     }
@@ -98,9 +97,9 @@ public class RsiController {
 
     @PostMapping("/quote")
     public String quoteSearch(Model model, @ModelAttribute("symbol") Symbol symbol) {
-        List<CMQuote> quotes = quoteService.getQuotes(symbol);
+        List<Quote> quotes = quoteService.getQuotesFromSite(symbol);
         quotes = analysisService.handleRSI(symbol, quotes, 6);
-        List<CMQuote> result = quotes.subList(0, 30);
+        List<Quote> result = quotes.subList(0, 30);
         model.addAttribute("quotes", result);
         return "quote";
     }

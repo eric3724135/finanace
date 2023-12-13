@@ -87,7 +87,7 @@ public class YahooUSQuoteParser implements Parser {
                             LocalDateTime localDateTime =
                                     LocalDateTime.ofInstant(Instant.ofEpochMilli(timeNode.asLong() * 1000), TimeZone
                                             .getDefault().toZoneId()).toLocalDate().atStartOfDay();
-                            quote.setTradeDate(localDateTime);
+                            quote.setTradeDate(localDateTime.toLocalDate());
                             quote.setSymbol(symbol.getSymbol());
                             quote.setName(symbol.getName());
                             quotes.add(quote);

@@ -1,6 +1,6 @@
 package com.eric.histock.util;
 
-import com.eric.domain.CMQuote;
+import com.eric.domain.Quote;
 import com.eric.domain.Period;
 import com.eric.domain.Symbol;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -16,8 +16,8 @@ import java.util.*;
 @Slf4j
 public class HiStockTechDataParser {
 
-    public static List<CMQuote> parse(Symbol symbol, JsonNode jsonNode) throws JsonProcessingException {
-        Map<LocalDateTime, CMQuote> quoteMap = new HashMap<>();
+    public static List<Quote> parse(Symbol symbol, JsonNode jsonNode) throws JsonProcessingException {
+        Map<LocalDateTime, Quote> quoteMap = new HashMap<>();
         ObjectMapper mapper = new ObjectMapper();
         Period period = Period.ONE_DAY;
 
@@ -65,28 +65,28 @@ public class HiStockTechDataParser {
         arrayNode = mapper.readValue(node.asText(), ArrayNode.class);
         HiStockTechDataParser.parseRSI12(quoteMap, arrayNode, symbol, period);
 
-        node = jsonNode.get("DIF");
-        arrayNode = mapper.readValue(node.asText(), ArrayNode.class);
-        HiStockTechDataParser.parseMACDDIF(quoteMap, arrayNode, symbol, period);
+//        node = jsonNode.get("DIF");
+//        arrayNode = mapper.readValue(node.asText(), ArrayNode.class);
+//        HiStockTechDataParser.parseMACDDIF(quoteMap, arrayNode, symbol, period);
+//
+//        node = jsonNode.get("MACD");
+//        arrayNode = mapper.readValue(node.asText(), ArrayNode.class);
+//        HiStockTechDataParser.parseMACD(quoteMap, arrayNode, symbol, period);
+//
+//        node = jsonNode.get("OSC");
+//        arrayNode = mapper.readValue(node.asText(), ArrayNode.class);
+//        HiStockTechDataParser.parseOSC(quoteMap, arrayNode, symbol, period);
 
-        node = jsonNode.get("MACD");
-        arrayNode = mapper.readValue(node.asText(), ArrayNode.class);
-        HiStockTechDataParser.parseMACD(quoteMap, arrayNode, symbol, period);
-
-        node = jsonNode.get("OSC");
-        arrayNode = mapper.readValue(node.asText(), ArrayNode.class);
-        HiStockTechDataParser.parseOSC(quoteMap, arrayNode, symbol, period);
-
-        fillDiff(quoteMap);
+//        fillDiff(quoteMap);
 
         return new ArrayList<>(quoteMap.values());
     }
 
-    private static void parseDailyK(Map<LocalDateTime, CMQuote> quoteMap, ArrayNode arrayNode, Symbol symbol, Period period) {
+    private static void parseDailyK(Map<LocalDateTime, Quote> quoteMap, ArrayNode arrayNode, Symbol symbol, Period period) {
         for (JsonNode node : arrayNode) {
             ArrayNode dataArray = (ArrayNode) node;
             long millis = dataArray.get(0).asLong();
-            CMQuote quote = getQuoteByTime(quoteMap, symbol, period, millis);
+            Quote quote = getQuoteByTime(quoteMap, symbol, period, millis);
             quote.setOpen(dataArray.get(1).asDouble());
             quote.setHigh(dataArray.get(2).asDouble());
             quote.setLow(dataArray.get(3).asDouble());
@@ -94,29 +94,29 @@ public class HiStockTechDataParser {
         }
     }
 
-    private static void parseVolume(Map<LocalDateTime, CMQuote> quoteMap, ArrayNode arrayNode, Symbol symbol, Period period) {
+    private static void parseVolume(Map<LocalDateTime, Quote> quoteMap, ArrayNode arrayNode, Symbol symbol, Period period) {
         for (JsonNode node : arrayNode) {
             ArrayNode dataArray = (ArrayNode) node;
             long millis = dataArray.get(0).asLong();
-            CMQuote quote = getQuoteByTime(quoteMap, symbol, period, millis);
+            Quote quote = getQuoteByTime(quoteMap, symbol, period, millis);
             quote.setVolume(dataArray.get(1).asDouble());
         }
     }
 
-    private static void parseMa5(Map<LocalDateTime, CMQuote> quoteMap, ArrayNode arrayNode, Symbol symbol, Period period) {
+    private static void parseMa5(Map<LocalDateTime, Quote> quoteMap, ArrayNode arrayNode, Symbol symbol, Period period) {
         for (JsonNode node : arrayNode) {
             ArrayNode dataArray = (ArrayNode) node;
             long millis = dataArray.get(0).asLong();
-            CMQuote quote = getQuoteByTime(quoteMap, symbol, period, millis);
+            Quote quote = getQuoteByTime(quoteMap, symbol, period, millis);
             quote.setMa5(dataArray.get(1).asDouble());
         }
     }
 
-    private static void parseMa10(Map<LocalDateTime, CMQuote> quoteMap, ArrayNode arrayNode, Symbol symbol, Period period) {
+    private static void parseMa10(Map<LocalDateTime, Quote> quoteMap, ArrayNode arrayNode, Symbol symbol, Period period) {
         for (JsonNode node : arrayNode) {
             ArrayNode dataArray = (ArrayNode) node;
             long millis = dataArray.get(0).asLong();
-            CMQuote quote = getQuoteByTime(quoteMap, symbol, period, millis);
+            Quote quote = getQuoteByTime(quoteMap, symbol, period, millis);
             try {
                 quote.setMa10(dataArray.get(1).asDouble());
             } catch (Exception e) {
@@ -125,121 +125,121 @@ public class HiStockTechDataParser {
         }
     }
 
-    private static void parseMa20(Map<LocalDateTime, CMQuote> quoteMap, ArrayNode arrayNode, Symbol symbol, Period period) {
+    private static void parseMa20(Map<LocalDateTime, Quote> quoteMap, ArrayNode arrayNode, Symbol symbol, Period period) {
         for (JsonNode node : arrayNode) {
             ArrayNode dataArray = (ArrayNode) node;
             long millis = dataArray.get(0).asLong();
-            CMQuote quote = getQuoteByTime(quoteMap, symbol, period, millis);
+            Quote quote = getQuoteByTime(quoteMap, symbol, period, millis);
             quote.setMa20(dataArray.get(1).asDouble());
         }
     }
 
-    private static void parseMa60(Map<LocalDateTime, CMQuote> quoteMap, ArrayNode arrayNode, Symbol symbol, Period period) {
+    private static void parseMa60(Map<LocalDateTime, Quote> quoteMap, ArrayNode arrayNode, Symbol symbol, Period period) {
         for (JsonNode node : arrayNode) {
             ArrayNode dataArray = (ArrayNode) node;
             long millis = dataArray.get(0).asLong();
-            CMQuote quote = getQuoteByTime(quoteMap, symbol, period, millis);
+            Quote quote = getQuoteByTime(quoteMap, symbol, period, millis);
             quote.setMa60(dataArray.get(1).asDouble());
         }
     }
 
-    private static void parseMa120(Map<LocalDateTime, CMQuote> quoteMap, ArrayNode arrayNode, Symbol symbol, Period period) {
+    private static void parseMa120(Map<LocalDateTime, Quote> quoteMap, ArrayNode arrayNode, Symbol symbol, Period period) {
         for (JsonNode node : arrayNode) {
             ArrayNode dataArray = (ArrayNode) node;
             long millis = dataArray.get(0).asLong();
-            CMQuote quote = getQuoteByTime(quoteMap, symbol, period, millis);
+            Quote quote = getQuoteByTime(quoteMap, symbol, period, millis);
             quote.setMa120(dataArray.get(1).asDouble());
         }
     }
 
-    private static void parseK9(Map<LocalDateTime, CMQuote> quoteMap, ArrayNode arrayNode, Symbol symbol, Period period) {
+    private static void parseK9(Map<LocalDateTime, Quote> quoteMap, ArrayNode arrayNode, Symbol symbol, Period period) {
         for (JsonNode node : arrayNode) {
             ArrayNode dataArray = (ArrayNode) node;
             long millis = dataArray.get(0).asLong();
-            CMQuote quote = getQuoteByTime(quoteMap, symbol, period, millis);
+            Quote quote = getQuoteByTime(quoteMap, symbol, period, millis);
             quote.setK9(dataArray.get(1).asDouble());
         }
     }
 
 
-    private static void parseD9(Map<LocalDateTime, CMQuote> quoteMap, ArrayNode arrayNode, Symbol symbol, Period period) {
+    private static void parseD9(Map<LocalDateTime, Quote> quoteMap, ArrayNode arrayNode, Symbol symbol, Period period) {
         for (JsonNode node : arrayNode) {
             ArrayNode dataArray = (ArrayNode) node;
             long millis = dataArray.get(0).asLong();
-            CMQuote quote = getQuoteByTime(quoteMap, symbol, period, millis);
+            Quote quote = getQuoteByTime(quoteMap, symbol, period, millis);
             quote.setD9(dataArray.get(1).asDouble());
         }
     }
 
-    private static void parseRSI6(Map<LocalDateTime, CMQuote> quoteMap, ArrayNode arrayNode, Symbol symbol, Period period) {
+    private static void parseRSI6(Map<LocalDateTime, Quote> quoteMap, ArrayNode arrayNode, Symbol symbol, Period period) {
         for (JsonNode node : arrayNode) {
             ArrayNode dataArray = (ArrayNode) node;
             long millis = dataArray.get(0).asLong();
-            CMQuote quote = getQuoteByTime(quoteMap, symbol, period, millis);
+            Quote quote = getQuoteByTime(quoteMap, symbol, period, millis);
             quote.setRsi5(dataArray.get(1).asDouble());
         }
     }
 
-    private static void parseRSI12(Map<LocalDateTime, CMQuote> quoteMap, ArrayNode arrayNode, Symbol symbol, Period period) {
+    private static void parseRSI12(Map<LocalDateTime, Quote> quoteMap, ArrayNode arrayNode, Symbol symbol, Period period) {
         for (JsonNode node : arrayNode) {
             ArrayNode dataArray = (ArrayNode) node;
             long millis = dataArray.get(0).asLong();
-            CMQuote quote = getQuoteByTime(quoteMap, symbol, period, millis);
+            Quote quote = getQuoteByTime(quoteMap, symbol, period, millis);
             quote.setRsi10(dataArray.get(1).asDouble());
         }
     }
 
-    private static void parseMACDDIF(Map<LocalDateTime, CMQuote> quoteMap, ArrayNode arrayNode, Symbol symbol, Period period) {
-        for (JsonNode node : arrayNode) {
-            ArrayNode dataArray = (ArrayNode) node;
-            long millis = dataArray.get(0).asLong();
-            CMQuote quote = getQuoteByTime(quoteMap, symbol, period, millis);
-            quote.setMacdDiff(dataArray.get(1).asDouble());
-        }
-    }
+//    private static void parseMACDDIF(Map<LocalDateTime, Quote> quoteMap, ArrayNode arrayNode, Symbol symbol, Period period) {
+//        for (JsonNode node : arrayNode) {
+//            ArrayNode dataArray = (ArrayNode) node;
+//            long millis = dataArray.get(0).asLong();
+//            Quote quote = getQuoteByTime(quoteMap, symbol, period, millis);
+//            quote.setMacdDiff(dataArray.get(1).asDouble());
+//        }
+//    }
 
-    private static void parseMACD(Map<LocalDateTime, CMQuote> quoteMap, ArrayNode arrayNode, Symbol symbol, Period period) {
-        for (JsonNode node : arrayNode) {
-            ArrayNode dataArray = (ArrayNode) node;
-            long millis = dataArray.get(0).asLong();
-            CMQuote quote = getQuoteByTime(quoteMap, symbol, period, millis);
-            quote.setMacd(dataArray.get(1).asDouble());
-        }
-    }
-    private static void parseOSC(Map<LocalDateTime, CMQuote> quoteMap, ArrayNode arrayNode, Symbol symbol, Period period) {
-        for (JsonNode node : arrayNode) {
-            ArrayNode dataArray = (ArrayNode) node;
-            long millis = dataArray.get(0).asLong();
-            CMQuote quote = getQuoteByTime(quoteMap, symbol, period, millis);
-            quote.setOsc(dataArray.get(1).asDouble());
-        }
-    }
+//    private static void parseMACD(Map<LocalDateTime, Quote> quoteMap, ArrayNode arrayNode, Symbol symbol, Period period) {
+//        for (JsonNode node : arrayNode) {
+//            ArrayNode dataArray = (ArrayNode) node;
+//            long millis = dataArray.get(0).asLong();
+//            Quote quote = getQuoteByTime(quoteMap, symbol, period, millis);
+//            quote.setMacd(dataArray.get(1).asDouble());
+//        }
+//    }
+//    private static void parseOSC(Map<LocalDateTime, Quote> quoteMap, ArrayNode arrayNode, Symbol symbol, Period period) {
+//        for (JsonNode node : arrayNode) {
+//            ArrayNode dataArray = (ArrayNode) node;
+//            long millis = dataArray.get(0).asLong();
+//            Quote quote = getQuoteByTime(quoteMap, symbol, period, millis);
+//            quote.setOsc(dataArray.get(1).asDouble());
+//        }
+//    }
 
 
-    private static CMQuote getQuoteByTime(Map<LocalDateTime, CMQuote> quoteMap, Symbol symbol, Period period, long millis) {
+    private static Quote getQuoteByTime(Map<LocalDateTime, Quote> quoteMap, Symbol symbol, Period period, long millis) {
         //
         LocalDateTime localDateTime =
                 LocalDateTime.ofInstant(Instant.ofEpochMilli(millis),
                         TimeZone.getDefault().toZoneId());
         localDateTime = localDateTime.toLocalDate().atStartOfDay();
-        CMQuote quote = quoteMap.computeIfAbsent(localDateTime, dateTime -> {
-            CMQuote newQuote = new CMQuote();
+        Quote quote = quoteMap.computeIfAbsent(localDateTime, dateTime -> {
+            Quote newQuote = new Quote();
             newQuote.setSymbol(symbol.getId());
             newQuote.setName(symbol.getName());
             newQuote.setPeriod(period.getCode());
-            newQuote.setTradeDate(dateTime);
+            newQuote.setTradeDate(dateTime.toLocalDate());
             return newQuote;
         });
         return quote;
     }
 
-    private static void fillDiff(Map<LocalDateTime, CMQuote> quoteMap) {
-        List<CMQuote> list = new ArrayList<>(quoteMap.values());
-        list.sort(Comparator.comparing(CMQuote::getTradeDate).reversed());
+    private static void fillDiff(Map<LocalDateTime, Quote> quoteMap) {
+        List<Quote> list = new ArrayList<>(quoteMap.values());
+        list.sort(Comparator.comparing(Quote::getTradeDate).reversed());
         for (int i = 0; i < list.size() - 1; i++) {
-            CMQuote today = list.get(i);
-            CMQuote past = list.get(i + 1);
-            CMQuote quote = quoteMap.get(today.getTradeDate());
+            Quote today = list.get(i);
+            Quote past = list.get(i + 1);
+            Quote quote = quoteMap.get(today.getTradeDate());
             quote.setDiff(today.getClose() - past.getClose());
         }
     }
@@ -252,7 +252,7 @@ public class HiStockTechDataParser {
         Symbol symbol = new Symbol();
         symbol.setId("2330");
         symbol.setName("台積電");
-        List<CMQuote> quotes = HiStockTechDataParser.parse(symbol, node);
+        List<Quote> quotes = HiStockTechDataParser.parse(symbol, node);
         log.info(quotes.size() + "");
     }
 }

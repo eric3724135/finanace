@@ -26,7 +26,7 @@ public enum SymbolType {
             map.put(key.code, key);
     }
 
-    public static SymbolType getByCode(int code) {
+    public static SymbolType getByCode(String code) {
         return map.get(code);
     }
 

@@ -1,23 +1,15 @@
 package com.eric.finance;
 
-import com.eric.domain.CMQuote;
-import com.eric.domain.Period;
 import com.eric.domain.Symbol;
-import com.eric.histock.HiStockDataHandler;
-import com.eric.parser.ParserResult;
 import com.eric.service.SymbolService;
-import com.eric.utils.RsiUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
-import org.springframework.stereotype.Service;
 
-import java.util.Collections;
 import java.util.List;
-import java.util.Scanner;
 
 @Slf4j
 @SpringBootApplication(scanBasePackages = {"com.eric"})

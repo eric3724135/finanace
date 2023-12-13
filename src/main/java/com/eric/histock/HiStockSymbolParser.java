@@ -1,8 +1,6 @@
 package com.eric.histock;
 
-import com.eric.domain.CMQuote;
 import com.eric.domain.Symbol;
-import com.eric.histock.util.HiStockTechDataParser;
 import com.eric.parser.Parser;
 import com.eric.parser.ParserError;
 import com.eric.parser.ParserResult;
@@ -22,7 +20,6 @@ import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.X509Certificate;
 import java.util.Iterator;
-import java.util.List;
 
 @Slf4j
 public class HiStockSymbolParser implements Parser<Symbol> {
