@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.*;
 
 @Service
@@ -34,6 +35,15 @@ public class QuoteService {
     public Quote getLatestQuote(String id) {
         QuoteDto dto = quoteRepository.findLatestById(id);
         return dto == null ? null : dto.getQuoteObj();
+    }
+
+    public List<Quote> getLatestRSIQuotes(LocalDate date) {
+        List<QuoteDto> quotes = quoteRepository.findLatestByDate(date);
+        List<Quote> results = new ArrayList<>();
+        quotes.forEach(quoteDto -> {
+            results.add(quoteDto.getQuoteObj());
+        });
+        return results;
     }
 
     public List<Quote> getQuotesFromSite(Symbol symbol) {

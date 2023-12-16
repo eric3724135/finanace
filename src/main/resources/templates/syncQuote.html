@@ -1,15 +1,88 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
+<style type="text/css">
+    label {
+        display: inline-block;
+        width: 400px;
+        margin: 5px;
+        text-align: left;
+    }
+
+    input[type=text], input[type=password], select {
+        display: inline-block;
+        width: 200px;
+    }
+
+    input[type=radio] {
+        margin-left: 45px;
+    }
+
+    input[type=checkbox] {
+        margin-right: 190px;
+    }
+
+    button {
+        padding: 5px;
+        margin: 10px;
+    }
+
+    span{
+        text-align: left;
+    }
+</style>
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
 </head>
 <body>
-<form action="#" th:action="@{/symbol}" method="post">
+<form action="#" th:action="@{/syncQuote}" method="post" th:object="${result}">
     <button type="submit">同步</button>
 </form>
-<form action="#" th:action="@{/quote}" method="post">
+<form action="#" th:action="@{/syncQuote}" method="get" th:object="${result}">
     <button type="submit">更新狀態</button>
 </form>
+
+<h4 th:text="${result.symbolCnt}"/>
+<h4>/</h4>
+<h4 th:text="${result.symbolSize}"/>
+<span th:text="${result.msg}"/>
+
+<table >
+    <colgroup>
+        <col width="100px">
+        <col width="100px">
+        <col width="100px">
+        <col width="100px">
+        <col width="100px">
+    </colgroup>
+    <thead>
+    <tr>
+        <th> 日期</th>
+        <th> 代號</th>
+        <th> 名稱</th>
+        <th> 收盤價</th>
+        <th> 開盤價</th>
+        <th> 最高價</th>
+        <th> 最低價</th>
+        <th> RSI6</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:if="${quotes.empty}">
+        <td colspan="2"> 無資料</td>
+    </tr>
+    <tr th:each="quote : ${quotes}">
+
+        <td th:text="${#temporals.format(quote.tradeDate, 'yyyy-MM-dd')}"></td>
+        <td th:text="${quote.symbol}" align="center"></td>
+        <td th:text="${quote.name}" align="center"></td>
+        <td th:text="${quote.close}" align="center"></td>
+        <td th:text="${quote.open}"  align="center"></td>
+        <td th:text="${quote.high}"  align="center"></td>
+        <td th:text="${quote.low}"  align="center"</td>
+        <td th:text="${#numbers.formatDecimal(quote.rsi5,0,2)}"  align="center"></td>
+    </tr>
+    </tbody>
+</table>
 </body>
 </html>

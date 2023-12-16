@@ -3,6 +3,7 @@ package com.eric.controller;
 import com.eric.domain.Quote;
 import com.eric.domain.SymbolCounter;
 import com.eric.domain.SymbolType;
+import com.eric.domain.SyncResult;
 import com.eric.persist.pojo.SymbolDto;
 import com.eric.service.QuoteService;
 import com.eric.service.SymbolService;
@@ -16,7 +17,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalUnit;
 import java.util.List;
 
 import static com.eric.domain.SymbolCounter.symbolCnt;
@@ -35,7 +35,8 @@ public class SymbolController {
 
     @GetMapping("/symbol")
     public String fetchSymbol(Model model) {
-
+        SyncResult result = new SyncResult(symbolCnt, symbolSize, "");
+        model.addAttribute("result", result);
         return "syncQuote";
     }
 
