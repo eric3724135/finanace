@@ -65,6 +65,7 @@
         <th> 最高價</th>
         <th> 最低價</th>
         <th> RSI6</th>
+        <th> ma120</th>
     </tr>
     </thead>
     <tbody>
@@ -81,6 +82,7 @@
         <td th:text="${quote.high}"  align="center"></td>
         <td th:text="${quote.low}"  align="center"</td>
         <td th:text="${#numbers.formatDecimal(quote.rsi5,0,2)}"  align="center"></td>
+        <td th:text="${#numbers.formatDecimal(quote.ma120,0,2)}"  align="center"></td>
     </tr>
     </tbody>
 </table>

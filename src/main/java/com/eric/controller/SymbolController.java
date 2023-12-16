@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.eric.domain.SymbolCounter.symbolCnt;
@@ -37,6 +38,7 @@ public class SymbolController {
     public String fetchSymbol(Model model) {
         SyncResult result = new SyncResult(symbolCnt, symbolSize, "");
         model.addAttribute("result", result);
+        model.addAttribute("quotes", new ArrayList<>());
         return "syncQuote";
     }
 
