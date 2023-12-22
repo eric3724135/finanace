@@ -7,14 +7,18 @@ import com.eric.persist.pojo.SymbolDto;
 import com.eric.service.QuoteService;
 import com.eric.service.SymbolService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
+import java.text.ParseException;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,34 +38,46 @@ public class QuoteController {
     @Autowired
     private QuoteService quoteService;
 
+    //    private final DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+    private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
     private Future<?> future;
     private ExecutorService executorService = Executors.newSingleThreadExecutor();
 
     @GetMapping("/syncQuote")
-    public String getState(Model model) {
-        LocalDate today = LocalDate.now();
-        if (today.getDayOfWeek().equals(DayOfWeek.SUNDAY)) {
-            today = today.minus(2, ChronoUnit.DAYS);
+    public String getState(Model model, @RequestParam(required = false, name = "queryDate") String dateStr) throws ParseException {
+        LocalDate queryDate;
+        if (StringUtils.isBlank(dateStr)) {
+            queryDate = LocalDate.now();
+            dateStr = queryDate.format(dateFormatter);
+        } else {
+            queryDate = LocalDate.parse(dateStr, dateFormatter);
         }
-        if (today.getDayOfWeek().equals(DayOfWeek.SATURDAY)) {
-            today = today.minus(1, ChronoUnit.DAYS);
+        if (queryDate.getDayOfWeek().equals(DayOfWeek.SUNDAY)) {
+            queryDate = queryDate.minus(2, ChronoUnit.DAYS);
         }
-        List<Quote> quotes = quoteService.getLatestRSIQuotes(today);
+        if (queryDate.getDayOfWeek().equals(DayOfWeek.SATURDAY)) {
+            queryDate = queryDate.minus(1, ChronoUnit.DAYS);
+        }
+        List<Quote> quotes = quoteService.getLatestRSIQuotes(queryDate);
         SyncResult result = new SyncResult(symbolCnt, symbolSize, "");
         model.addAttribute("result", result);
         model.addAttribute("quotes", quotes);
+        model.addAttribute("queryDate", dateStr);
         return "syncQuote";
     }
 
 
     @PostMapping("/syncQuote")
     public String syncDailyQuote(Model model) {
+
         List<SymbolDto> tweSymbols = symbolService.getSymbolsFromLocal(SymbolType.TWE);
         symbolSize = tweSymbols.size();
         symbolCnt = 0;
         if (future != null && !future.isDone()) {
             SyncResult result = new SyncResult(symbolCnt, symbolSize, "尚在同步RSI");
             model.addAttribute("result", result);
+            model.addAttribute("quotes", new ArrayList<>());
             return "syncQuote";
         }
         future = executorService.submit(() -> tweSymbols.forEach(symbol -> {
@@ -83,7 +99,7 @@ public class QuoteController {
                     return;
                 }
                 Quote quote = quotes.get(0);
-                if (quote != null && quote.getRsi5() < 15) {
+                if (quote != null && quote.getRsi5() < 20) {
                     try {
                         Quote result = quoteService.addQuote(quote);
                         log.info("[{}] {} {} GET", symbol.getId(), symbol.getName(), result.getTradeDate());
@@ -95,20 +111,10 @@ public class QuoteController {
 
         }));
 
-//        List<SymbolDto> usSymbols = symbolService.getSymbolsFromLocal(SymbolType.US);
-//        usSymbols.forEach(symbol -> {
-//            log.debug("[{}] {} Sync",symbol.getId(), symbol.getName());
-//            List<Quote> quotes = quoteService.getQuotesFromSite(symbol.getSymbolObj());
-//            if (quotes == null || quotes.isEmpty()) {
-//                return;
-//            }
-//            Quote quote = quotes.get(0);
-//            if (quote != null && quote.getRsi5() < 15) {
-//                log.debug("[{}] {} GET",symbol.getId(), symbol.getName());
-//            }
-//        });
+
         SyncResult result = new SyncResult(symbolCnt, symbolSize, "尚在同步RSI");
         model.addAttribute("result", result);
+        model.addAttribute("quotes", new ArrayList<>());
         return "syncQuote";
     }
 }

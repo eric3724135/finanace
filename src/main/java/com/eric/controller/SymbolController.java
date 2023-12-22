@@ -18,6 +18,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import static com.eric.domain.SymbolCounter.symbolCnt;
@@ -34,64 +35,65 @@ public class SymbolController {
     private QuoteService quoteService;
 
 
-    @GetMapping("/symbol")
-    public String fetchSymbol(Model model) {
-        SyncResult result = new SyncResult(symbolCnt, symbolSize, "");
-        model.addAttribute("result", result);
-        model.addAttribute("quotes", new ArrayList<>());
-        return "syncQuote";
-    }
+//    @GetMapping("/symbol")
+//    public String fetchSymbol(Model model) {
+//        SyncResult result = new SyncResult(symbolCnt, symbolSize, "");
+//        model.addAttribute("result", result);
+//        model.addAttribute("quotes", new ArrayList<>());
+//        model.addAttribute("queryDate", new Date());
+//        return "syncQuote";
+//    }
 
-    @PostMapping("/symbol")
-    public String syncDailyQuote(Model model) {
-        List<SymbolDto> tweSymbols = symbolService.getSymbolsFromLocal(SymbolType.TWE);
-        symbolSize = tweSymbols.size();
-        symbolCnt = 0;
-        tweSymbols.forEach(symbol -> {
-            symbolCnt++;
-            log.debug("[{}] {} Sync", symbol.getId(), symbol.getName());
-            Quote latestQuote = quoteService.getLatestQuote(symbol.getId());
-            LocalDate today = LocalDate.now();
-            if (today.getDayOfWeek().equals(DayOfWeek.SUNDAY)) {
-                today = today.minus(2, ChronoUnit.DAYS);
-            }
-            if (today.getDayOfWeek().equals(DayOfWeek.SATURDAY)) {
-                today = today.minus(1, ChronoUnit.DAYS);
-            }
-
-            if (latestQuote == null ||
-                    latestQuote.getTradeDate().isBefore(today)) {
-                List<Quote> quotes = quoteService.getQuotesFromSite(symbol.getSymbolObj());
-                if (quotes == null || quotes.isEmpty()) {
-                    return;
-                }
-                Quote quote = quotes.get(0);
-                if (quote != null && quote.getRsi5() < 15) {
-                    try {
-                        Quote result = quoteService.addQuote(quote);
-                        log.info("[{}] {} {} GET", symbol.getId(), symbol.getName(), result.getTradeDate());
-                    } catch (Exception e) {
-                        log.error("[{}] exception", symbol.getId(), e);
-                    }
-                }
-            }
-
-        });
-
-
-//        List<SymbolDto> usSymbols = symbolService.getSymbolsFromLocal(SymbolType.US);
-//        usSymbols.forEach(symbol -> {
-//            log.debug("[{}] {} Sync",symbol.getId(), symbol.getName());
-//            List<Quote> quotes = quoteService.getQuotesFromSite(symbol.getSymbolObj());
-//            if (quotes == null || quotes.isEmpty()) {
-//                return;
+//    @PostMapping("/symbol")
+//    public String syncDailyQuote(Model model) {
+//        List<SymbolDto> tweSymbols = symbolService.getSymbolsFromLocal(SymbolType.TWE);
+//        symbolSize = tweSymbols.size();
+//        symbolCnt = 0;
+//        tweSymbols.forEach(symbol -> {
+//            symbolCnt++;
+//            log.debug("[{}] {} Sync", symbol.getId(), symbol.getName());
+//            Quote latestQuote = quoteService.getLatestQuote(symbol.getId());
+//            LocalDate today = LocalDate.now();
+//            if (today.getDayOfWeek().equals(DayOfWeek.SUNDAY)) {
+//                today = today.minus(2, ChronoUnit.DAYS);
 //            }
-//            Quote quote = quotes.get(0);
-//            if (quote != null && quote.getRsi5() < 15) {
-//                log.debug("[{}] {} GET",symbol.getId(), symbol.getName());
+//            if (today.getDayOfWeek().equals(DayOfWeek.SATURDAY)) {
+//                today = today.minus(1, ChronoUnit.DAYS);
 //            }
+//
+//            if (latestQuote == null ||
+//                    latestQuote.getTradeDate().isBefore(today)) {
+//                List<Quote> quotes = quoteService.getQuotesFromSite(symbol.getSymbolObj());
+//                if (quotes == null || quotes.isEmpty()) {
+//                    return;
+//                }
+//                Quote quote = quotes.get(0);
+//                if (quote != null && quote.getRsi5() < 15) {
+//                    try {
+//                        Quote result = quoteService.addQuote(quote);
+//                        log.info("[{}] {} {} GET", symbol.getId(), symbol.getName(), result.getTradeDate());
+//                    } catch (Exception e) {
+//                        log.error("[{}] exception", symbol.getId(), e);
+//                    }
+//                }
+//            }
+//
 //        });
-
-        return "syncQuote";
-    }
+//
+//
+////        List<SymbolDto> usSymbols = symbolService.getSymbolsFromLocal(SymbolType.US);
+////        usSymbols.forEach(symbol -> {
+////            log.debug("[{}] {} Sync",symbol.getId(), symbol.getName());
+////            List<Quote> quotes = quoteService.getQuotesFromSite(symbol.getSymbolObj());
+////            if (quotes == null || quotes.isEmpty()) {
+////                return;
+////            }
+////            Quote quote = quotes.get(0);
+////            if (quote != null && quote.getRsi5() < 15) {
+////                log.debug("[{}] {} GET",symbol.getId(), symbol.getName());
+////            }
+////        });
+//
+//        return "syncQuote";
+//    }
 }
