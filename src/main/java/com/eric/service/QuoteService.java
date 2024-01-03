@@ -53,7 +53,13 @@ public class QuoteService {
             List<Quote> quotes = quoteResult.getResultList();
             Collections.sort(quotes, (o1, o2) -> o2.getTradeDate().compareTo(o1.getTradeDate()));
             return quotes;
+        }else{
+            return new ArrayList<>();
         }
+
+    }
+
+    public List<Quote> getusQuotesFromSite(Symbol symbol) {
         //hiStock 查無 查yahoo quote
         YahooUSQuoteParser yahooUSQuoteParser = new YahooUSQuoteParser(new UsSymbol(symbol.getId(), symbol.getName()), "6mo");
         ParserResult<USQuote> usQuoteResult = yahooUSQuoteParser.getResult();
@@ -61,7 +67,6 @@ public class QuoteService {
         usQuoteResult.getResultList().forEach(usQuote -> usResult.add(this.convert(usQuote)));
         Collections.sort(usResult, (o1, o2) -> o2.getTradeDate().compareTo(o1.getTradeDate()));
         return usResult;
-
     }
 
     private Quote convert(USQuote usQuote) {

@@ -10,20 +10,6 @@ import com.eric.service.SymbolService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-
-import java.time.DayOfWeek;
-import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-
-import static com.eric.domain.SymbolCounter.symbolCnt;
-
-import static com.eric.domain.SymbolCounter.symbolSize;
 
 @Slf4j
 @Controller
