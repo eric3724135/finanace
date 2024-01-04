@@ -8,6 +8,8 @@ import com.eric.persist.repo.QuoteRepository;
 import com.eric.yahoo.YahooUSQuoteParser;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Example;
+import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -37,8 +39,8 @@ public class QuoteService {
         return dto == null ? null : dto.getQuoteObj();
     }
 
-    public List<Quote> getLatestRSIQuotes(LocalDate date) {
-        List<QuoteDto> quotes = quoteRepository.findLatestByDate(date);
+    public List<Quote> getLatestRSIQuotes(LocalDate date, String source) {
+        List<QuoteDto> quotes = quoteRepository.findLatestByDate(date, source);
         List<Quote> results = new ArrayList<>();
         quotes.forEach(quoteDto -> {
             results.add(quoteDto.getQuoteObj());
@@ -46,14 +48,26 @@ public class QuoteService {
         return results;
     }
 
-    public List<Quote> getQuotesFromSite(Symbol symbol) {
+    public boolean getQuoteExist(String id, LocalDate date) {
+//        ExampleMatcher matcher = ExampleMatcher.matchingAll()
+//                .withMatcher("symbol", ExampleMatcher.GenericPropertyMatchers.exact())
+//                .withMatcher("tradeDate", ExampleMatcher.GenericPropertyMatchers.exact());
+//        QuoteDto dto = new QuoteDto();
+//        dto.setSymbol(id);
+//        dto.setTradeDate(date);
+//        Example<QuoteDto> example = Example.of(dto, matcher);
+        List<QuoteDto> result = quoteRepository.findByIdAndTradeDate(id, date);
+        return result != null && !result.isEmpty();
+    }
+
+    public List<Quote> getTweQuotesFromSite(Symbol symbol) {
         HiStockDataHandler parser = new HiStockDataHandler(symbol, Period.ONE_DAY, 20);
         ParserResult<Quote> quoteResult = parser.getResult();
         if (quoteResult.isSuccess()) {
             List<Quote> quotes = quoteResult.getResultList();
             Collections.sort(quotes, (o1, o2) -> o2.getTradeDate().compareTo(o1.getTradeDate()));
             return quotes;
-        }else{
+        } else {
             return new ArrayList<>();
         }
 
@@ -64,18 +78,19 @@ public class QuoteService {
         YahooUSQuoteParser yahooUSQuoteParser = new YahooUSQuoteParser(new UsSymbol(symbol.getId(), symbol.getName()), "6mo");
         ParserResult<USQuote> usQuoteResult = yahooUSQuoteParser.getResult();
         List<Quote> usResult = new ArrayList<>();
-        usQuoteResult.getResultList().forEach(usQuote -> usResult.add(this.convert(usQuote)));
+        usQuoteResult.getResultList().forEach(usQuote -> usResult.add(this.convertUSQuote(usQuote)));
         Collections.sort(usResult, (o1, o2) -> o2.getTradeDate().compareTo(o1.getTradeDate()));
         return usResult;
     }
 
-    private Quote convert(USQuote usQuote) {
+    private Quote convertUSQuote(USQuote usQuote) {
         Quote quote = Quote.buildSimpleQuote(new Symbol(usQuote.getSymbol(), usQuote.getName()), usQuote.getTradeDate());
         quote.setOpen(usQuote.getOpen());
         quote.setHigh(usQuote.getHigh());
         quote.setLow(usQuote.getLow());
         quote.setClose(usQuote.getClose());
         quote.setVolume(usQuote.getVolume());
+        quote.setSource(Quote.US_QUOTE);
         return quote;
     }
 

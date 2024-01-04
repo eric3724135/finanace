@@ -27,6 +27,7 @@ CREATE TABLE quote (
  kd_diff double ,
  rsi5 double ,
  rsi10 double,
+ source char(1),
  UNIQUE (symbol,trade_date,period)
 );
 

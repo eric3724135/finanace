@@ -18,6 +18,10 @@ import java.util.Objects;
 @Data
 public class Quote {
 
+    public static final String US_QUOTE= "u";
+
+    public static final String TWE_QUOTE= "t";
+
     private long seq;
     /**
      * symbol
@@ -104,21 +108,9 @@ public class Quote {
      */
     private double rsi10;
     /**
-     * mtm10
+     * source
      */
-    private Double mtm10;
-    /**
-     * mtm_ma10
-     */
-    private Double mtmMa10;
-    /**
-     * mtm10p
-     */
-    private Double mtm10p;
-    /**
-     * mtmMa10p
-     */
-    private Double mtmMa10p;
+    private String source;
 
 
 //    @Transient
@@ -157,6 +149,7 @@ public class Quote {
         quote.setKdDiff(kdDiff);
         quote.setRsi5(rsi5);
         quote.setRsi10(rsi10);
+        quote.setSource(source);
         return quote;
     }
 

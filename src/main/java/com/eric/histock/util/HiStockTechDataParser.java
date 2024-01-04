@@ -78,6 +78,9 @@ public class HiStockTechDataParser {
 //        HiStockTechDataParser.parseOSC(quoteMap, arrayNode, symbol, period);
 
 //        fillDiff(quoteMap);
+        quoteMap.values().forEach(quote -> {
+            quote.setSource(Quote.TWE_QUOTE);
+        });
 
         return new ArrayList<>(quoteMap.values());
     }

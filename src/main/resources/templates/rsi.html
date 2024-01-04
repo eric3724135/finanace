@@ -31,13 +31,17 @@
     }
 </style>
 <head>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+
     <meta charset="UTF-8">
     <title>Title</title>
 </head>
 <body>
+<div th:insert="~{nav :: nav}"></div>
 <div align="center">
     <h1>RSI 計算</h1>
-    <form action="#" th:action="@{/}" method="post" th:object="${rsiResult}">
+    <form action="#" th:action="@{/rsi}" method="post" th:object="${rsiResult}">
         <label>請輸入查詢對象台股請填1,美股(未實作)請填2 :</label>
         <input type="text" th:field="*{stockType}"/><br/>
 

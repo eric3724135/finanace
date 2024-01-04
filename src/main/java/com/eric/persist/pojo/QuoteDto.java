@@ -133,6 +133,13 @@ public class QuoteDto {
     private double rsi10;
 
 
+    /**
+     * source
+     */
+    @Column(name = "source")
+    private String source;
+
+
     @Transient
     private DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("MMddHHmm");
 
@@ -170,6 +177,7 @@ public class QuoteDto {
         quote.setKdDiff(kdDiff);
         quote.setRsi5(rsi5);
         quote.setRsi10(rsi10);
+        quote.setSource(source);
         return quote;
     }
 }

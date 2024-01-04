@@ -1,6 +1,7 @@
 package com.eric.controller;
 
 import com.eric.domain.Quote;
+import com.eric.domain.SymbolCounter;
 import com.eric.domain.SymbolType;
 import com.eric.domain.SyncResult;
 import com.eric.persist.pojo.SymbolDto;
@@ -31,14 +32,12 @@ import static com.eric.domain.SymbolCounter.*;
 
 @Slf4j
 @Controller
-public class QuoteController {
+public class TweQuoteController {
 
     @Autowired
     private SymbolService symbolService;
     @Autowired
     private QuoteService quoteService;
-    @Autowired
-    private Ta4jIndicatorService indicatorService;
 
     //    private final DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
     private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -46,7 +45,7 @@ public class QuoteController {
     private Future<?> future;
     private ExecutorService executorService = Executors.newSingleThreadExecutor();
 
-    @GetMapping("/syncQuote")
+    @GetMapping("/twe")
     public String getState(Model model, @RequestParam(required = false, name = "queryDate") String dateStr) throws ParseException {
         LocalDate queryDate;
         if (StringUtils.isBlank(dateStr)) {
@@ -61,29 +60,26 @@ public class QuoteController {
         if (queryDate.getDayOfWeek().equals(DayOfWeek.SATURDAY)) {
             queryDate = queryDate.minus(1, ChronoUnit.DAYS);
         }
-        List<Quote> quotes = quoteService.getLatestRSIQuotes(queryDate);
-        SyncResult result = new SyncResult(tweSymbolCnt, tweSymbolSize, usSymbolCnt, usSymbolSize, "");
+        List<Quote> quotes = quoteService.getLatestRSIQuotes(queryDate, Quote.TWE_QUOTE);
+        SyncResult result = new SyncResult(SymbolCounter.tweSymbolCnt, SymbolCounter.tweSymbolSize, SymbolCounter.usSymbolCnt, SymbolCounter.usSymbolSize, "");
         model.addAttribute("result", result);
         model.addAttribute("quotes", quotes);
         model.addAttribute("queryDate", dateStr);
-        return "syncQuote";
+        return "twe";
     }
 
 
-    @PostMapping("/syncQuote")
+    @PostMapping("/twe")
     public String syncDailyQuote(Model model) {
 
         List<SymbolDto> tweSymbols = symbolService.getSymbolsFromLocal(SymbolType.TWE);
-        List<SymbolDto> usSymbols = symbolService.getSymbolsFromLocal(SymbolType.US);
-        tweSymbolSize = tweSymbols.size();
-        tweSymbolCnt = 0;
-        usSymbolSize = usSymbols.size();
-        usSymbolCnt = 0;
+        SymbolCounter.tweSymbolSize = tweSymbols.size();
+        SymbolCounter.tweSymbolCnt = 0;
         if (future != null && !future.isDone()) {
-            SyncResult result = new SyncResult(tweSymbolCnt, tweSymbolSize, usSymbolCnt, usSymbolSize, "尚在同步RSI");
+            SyncResult result = new SyncResult(SymbolCounter.tweSymbolCnt, SymbolCounter.tweSymbolSize, SymbolCounter.usSymbolCnt, SymbolCounter.usSymbolSize, "尚在同步RSI");
             model.addAttribute("result", result);
             model.addAttribute("quotes", new ArrayList<>());
-            return "syncQuote";
+            return "twe";
         }
         future = executorService.submit(() -> {
             tweSymbols.forEach(symbol -> {
@@ -98,16 +94,21 @@ public class QuoteController {
                     today = today.minus(1, ChronoUnit.DAYS);
                 }
 
-                if (latestQuote == null || latestQuote.getTradeDate().isBefore(today)) {
-                    List<Quote> quotes = quoteService.getQuotesFromSite(symbol.getSymbolObj());
+                if (latestQuote == null
+                        || latestQuote.getTradeDate().isBefore(today)
+                        || latestQuote.getTradeDate().isEqual(today)) {
+                    List<Quote> quotes = quoteService.getTweQuotesFromSite(symbol.getSymbolObj());
                     if (quotes == null || quotes.isEmpty()) {
                         return;
                     }
                     Quote quote = quotes.get(0);
                     if (quote != null && quote.getRsi5() < 20) {
                         try {
-                            Quote result = quoteService.addQuote(quote);
-                            log.info("[{}] {} {} GET", symbol.getId(), symbol.getName(), result.getTradeDate());
+                            boolean isExist = quoteService.getQuoteExist(quote.getSymbol(), quote.getTradeDate());
+                            if (!isExist) {
+                                Quote result = quoteService.addQuote(quote);
+                                log.info("[{}] {} {} GET", symbol.getId(), symbol.getName(), result.getTradeDate());
+                            }
                         } catch (Exception e) {
                             log.error("[{}] exception", symbol.getId(), e);
                         }
@@ -116,45 +117,12 @@ public class QuoteController {
 
             });
 
-            usSymbols.forEach(usSymbol -> {
-                usSymbolCnt++;
-                log.debug("[{}] {} Sync", usSymbol.getId(), usSymbol.getName());
-                Quote latestQuote = quoteService.getLatestQuote(usSymbol.getId());
-                LocalDate today = LocalDate.now();
-                if (today.getDayOfWeek().equals(DayOfWeek.SUNDAY)) {
-                    today = today.minus(2, ChronoUnit.DAYS);
-                }
-                if (today.getDayOfWeek().equals(DayOfWeek.SATURDAY)) {
-                    today = today.minus(1, ChronoUnit.DAYS);
-                }
-
-                if (latestQuote == null || latestQuote.getTradeDate().isBefore(today)) {
-
-                    List<Quote> quotes = quoteService.getusQuotesFromSite(usSymbol.getSymbolObj());
-                    if (quotes == null || quotes.isEmpty()) {
-                        return;
-                    }
-                    this.indicatorService.fillRsiValue(usSymbol.getId(), quotes, 6);
-                    this.indicatorService.fillMa120Value(usSymbol.getId(), quotes);
-
-                    Quote quote = quotes.get(0);
-                    if (quote != null && quote.getRsi5() < 20) {
-                        try {
-                            Quote result = quoteService.addQuote(quote);
-                            log.info("[{}] {} {} GET", usSymbol.getId(), usSymbol.getName(), result.getTradeDate());
-                        } catch (Exception e) {
-                            log.error("[{}] exception", usSymbol.getId(), e);
-                        }
-                    }
-                }
-
-            });
         });
 
 
-        SyncResult result = new SyncResult(tweSymbolCnt, tweSymbolSize, usSymbolCnt, usSymbolSize, "尚在同步RSI");
+        SyncResult result = new SyncResult(SymbolCounter.tweSymbolCnt, SymbolCounter.tweSymbolSize, SymbolCounter.usSymbolCnt, SymbolCounter.usSymbolSize, "尚在同步RSI");
         model.addAttribute("result", result);
         model.addAttribute("quotes", new ArrayList<>());
-        return "syncQuote";
+        return "twe";
     }
 }
