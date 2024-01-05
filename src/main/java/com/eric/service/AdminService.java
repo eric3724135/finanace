@@ -1,5 +1,6 @@
 package com.eric.service;
 
+import com.eric.mdj.MDJSP500USSymbolParser;
 import com.eric.persist.repo.QuoteRepository;
 import com.eric.persist.repo.SymbolRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -21,5 +22,10 @@ public class AdminService {
 
     public void truncateSymbol() {
         symbolRepository.deleteAll();
+    }
+
+    public void testFunc() {
+        MDJSP500USSymbolParser parser = new MDJSP500USSymbolParser();
+        parser.getResult();
     }
 }

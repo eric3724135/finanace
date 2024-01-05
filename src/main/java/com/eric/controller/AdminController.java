@@ -51,6 +51,21 @@ public class AdminController {
         return "admin";
     }
 
+    @PostMapping("/test")
+    public String test(Model model) {
+        SyncResult result = new SyncResult();
+        try {
+            adminService.testFunc();
+            result.setMsg("QQ");
+            model.addAttribute("result", result);
+        } catch (Exception e) {
+            result.setMsg(String.format("QQ %s", e.getMessage()));
+            model.addAttribute("result", result);
+        }
+
+        return "admin";
+    }
+
 
 
 }

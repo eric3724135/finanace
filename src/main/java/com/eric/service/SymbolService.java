@@ -3,7 +3,7 @@ package com.eric.service;
 import com.eric.domain.Symbol;
 import com.eric.domain.SymbolType;
 import com.eric.histock.HiStockSymbolParser;
-import com.eric.mdj.MDJUsSymbolParser;
+import com.eric.mdj.MDJSP500USSymbolParser;
 import com.eric.parser.ParserResult;
 import com.eric.persist.pojo.SymbolDto;
 import com.eric.persist.repo.SymbolRepository;
@@ -33,7 +33,8 @@ public class SymbolService {
     }
 
     public List<Symbol> getUSSymbols() {
-        MDJUsSymbolParser parser = new MDJUsSymbolParser();
+//        MDJUsSymbolParser parser = new MDJUsSymbolParser();
+        MDJSP500USSymbolParser parser = new MDJSP500USSymbolParser();
         ParserResult<Symbol> result = parser.getResult();
         return result.getResultList();
     }
