@@ -34,17 +34,10 @@ import static com.eric.domain.SymbolCounter.*;
 public class UsQuoteController {
 
     @Autowired
-    private SymbolService symbolService;
-    @Autowired
     private QuoteService quoteService;
-    @Autowired
-    private Ta4jIndicatorService indicatorService;
 
-    //    private final DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
     private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-    private Future<?> future;
-    private ExecutorService executorService = Executors.newSingleThreadExecutor();
 
     @GetMapping("/us")
     public String getState(Model model, @RequestParam(required = false, name = "queryDate") String dateStr) throws ParseException {
@@ -73,59 +66,12 @@ public class UsQuoteController {
     @PostMapping("/us")
     public String syncDailyQuote(Model model) {
 
-        List<SymbolDto> usSymbols = symbolService.getSymbolsFromLocal(SymbolType.US);
-        usSymbolSize = usSymbols.size();
-        usSymbolCnt = 0;
-        if (future != null && !future.isDone()) {
-            SyncResult result = new SyncResult(tweSymbolCnt, tweSymbolSize, usSymbolCnt, usSymbolSize, "尚在同步RSI");
-            model.addAttribute("result", result);
-            model.addAttribute("quotes", new ArrayList<>());
-            return "us";
-        }
-        future = executorService.submit(() -> {
+        this.quoteService.scheduleUSDailyQuote();
 
-            usSymbols.forEach(usSymbol -> {
-                usSymbolCnt++;
-                log.debug("[{}] {} Sync", usSymbol.getId(), usSymbol.getName());
-                Quote latestQuote = quoteService.getLatestQuote(usSymbol.getId());
-                LocalDate today = LocalDate.now();
-                if (today.getDayOfWeek().equals(DayOfWeek.SUNDAY)) {
-                    today = today.minus(2, ChronoUnit.DAYS);
-                }
-                if (today.getDayOfWeek().equals(DayOfWeek.SATURDAY)) {
-                    today = today.minus(1, ChronoUnit.DAYS);
-                }
-
-                if (latestQuote == null || latestQuote.getTradeDate().isBefore(today) || latestQuote.getTradeDate().isEqual(today)) {
-                    List<Quote> quotes = quoteService.getusQuotesFromSite(usSymbol.getSymbolObj());
-                    if (quotes == null || quotes.isEmpty()) {
-                        return;
-                    }
-                    this.indicatorService.fillRsiValue(usSymbol.getId(), quotes, 6);
-                    this.indicatorService.fillMa120Value(usSymbol.getId(), quotes);
-
-                    Quote quote = quotes.get(0);
-                    if (quote != null && quote.getRsi5() < 20) {
-                        try {
-                            boolean isExist = quoteService.getQuoteExist(quote.getSymbol(), quote.getTradeDate());
-                            if (!isExist) {
-                                Quote result = quoteService.addQuote(quote);
-                                log.info("[{}] {} {} GET", usSymbol.getId(), usSymbol.getName(), result.getTradeDate());
-                            }
-
-                        } catch (Exception e) {
-                            log.error("[{}] exception", usSymbol.getId(), e);
-                        }
-                    }
-                }
-
-            });
-        });
-
-
-        SyncResult result = new SyncResult(tweSymbolCnt, tweSymbolSize, usSymbolCnt, usSymbolSize, "尚在同步RSI");
+        SyncResult result = new SyncResult();
+        result.setMsg("啟動美股手動更新");
         model.addAttribute("result", result);
-        model.addAttribute("quotes", new ArrayList<>());
-        return "us";
+
+        return "admin";
     }
 }

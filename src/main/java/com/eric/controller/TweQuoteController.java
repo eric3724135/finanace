@@ -35,15 +35,10 @@ import static com.eric.domain.SymbolCounter.*;
 public class TweQuoteController {
 
     @Autowired
-    private SymbolService symbolService;
-    @Autowired
     private QuoteService quoteService;
 
-    //    private final DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
     private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-    private Future<?> future;
-    private ExecutorService executorService = Executors.newSingleThreadExecutor();
 
     @GetMapping("/twe")
     public String getState(Model model, @RequestParam(required = false, name = "queryDate") String dateStr) throws ParseException {
@@ -69,60 +64,16 @@ public class TweQuoteController {
     }
 
 
+
     @PostMapping("/twe")
     public String syncDailyQuote(Model model) {
 
-        List<SymbolDto> tweSymbols = symbolService.getSymbolsFromLocal(SymbolType.TWE);
-        SymbolCounter.tweSymbolSize = tweSymbols.size();
-        SymbolCounter.tweSymbolCnt = 0;
-        if (future != null && !future.isDone()) {
-            SyncResult result = new SyncResult(SymbolCounter.tweSymbolCnt, SymbolCounter.tweSymbolSize, SymbolCounter.usSymbolCnt, SymbolCounter.usSymbolSize, "尚在同步RSI");
-            model.addAttribute("result", result);
-            model.addAttribute("quotes", new ArrayList<>());
-            return "twe";
-        }
-        future = executorService.submit(() -> {
-            tweSymbols.forEach(symbol -> {
-                tweSymbolCnt++;
-                log.debug("[{}] {} Sync", symbol.getId(), symbol.getName());
-                Quote latestQuote = quoteService.getLatestQuote(symbol.getId());
-                LocalDate today = LocalDate.now();
-                if (today.getDayOfWeek().equals(DayOfWeek.SUNDAY)) {
-                    today = today.minus(2, ChronoUnit.DAYS);
-                }
-                if (today.getDayOfWeek().equals(DayOfWeek.SATURDAY)) {
-                    today = today.minus(1, ChronoUnit.DAYS);
-                }
-
-                if (latestQuote == null
-                        || latestQuote.getTradeDate().isBefore(today)
-                        || latestQuote.getTradeDate().isEqual(today)) {
-                    List<Quote> quotes = quoteService.getTweQuotesFromSite(symbol.getSymbolObj());
-                    if (quotes == null || quotes.isEmpty()) {
-                        return;
-                    }
-                    Quote quote = quotes.get(0);
-                    if (quote != null && quote.getRsi5() < 20) {
-                        try {
-                            boolean isExist = quoteService.getQuoteExist(quote.getSymbol(), quote.getTradeDate());
-                            if (!isExist) {
-                                Quote result = quoteService.addQuote(quote);
-                                log.info("[{}] {} {} GET", symbol.getId(), symbol.getName(), result.getTradeDate());
-                            }
-                        } catch (Exception e) {
-                            log.error("[{}] exception", symbol.getId(), e);
-                        }
-                    }
-                }
-
-            });
-
-        });
-
-
-        SyncResult result = new SyncResult(SymbolCounter.tweSymbolCnt, SymbolCounter.tweSymbolSize, SymbolCounter.usSymbolCnt, SymbolCounter.usSymbolSize, "尚在同步RSI");
+        this.quoteService.scheduleTweDailyQuote();
+        SyncResult result = new SyncResult();
+        result.setMsg("啟動台股手動更新");
         model.addAttribute("result", result);
-        model.addAttribute("quotes", new ArrayList<>());
-        return "twe";
+
+        return "admin";
+
     }
 }
