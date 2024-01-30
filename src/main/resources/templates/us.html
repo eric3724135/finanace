@@ -31,7 +31,7 @@
         <div class="col" th:text="${result.usSymbolCnt}"/>
         <div class="col">/</div>
         <div class="col" th:text="${result.usSymbolSize}"/>
-        <div class="col-lg-9" th:style="'text-align: right;'">收盤價低於ma120顯示橘色，低於mas120*0.8顯示紅色</div>
+        <div class="col-lg-9" th:style="'text-align: right;'">P/MA低於1顯示橘色，低於0.8顯示紅色</div>
 
     </div>
     <div class="row">
@@ -47,13 +47,14 @@
         <th scope="col"> 代號</th>
         <th scope="col"> 名稱</th>
         <th scope="col"> 收盤價</th>
+        <th scope="col"> MA120</th>
+        <th scope="col"> P/MA</th>
+        <th scope="col"> RSI6(20以下)</th>
+        <th scope="col"> RSI24</th>
+        <th scope="col"> RSI6(週)</th>
         <th scope="col"> 開盤價</th>
         <th scope="col"> 最高價</th>
         <th scope="col"> 最低價</th>
-        <th scope="col"> RSI6(20以下)</th>
-        <th scope="col"> ma120</th>
-        <th scope="col"> 收盤價*1.25</th>
-        <th scope="col"> 收盤價/1.25</th>
     </tr>
     </thead>
     <tbody>
@@ -64,14 +65,15 @@
         <td th:text="${#temporals.format(quote.tradeDate, 'yyyy-MM-dd')}"></td>
         <td th:text="${quote.symbol}"></td>
         <td th:text="${quote.name}"></td>
-        <td th:text="${quote.close}" th:style="${quote.ma120 gt quote.close} ? (${quote.ma120*0.85 gt quote.close}? 'color:red;': 'color:orange;') : ''"></td>
+        <td th:text="${quote.close}" ></td>
+        <td th:text="${#numbers.formatDecimal(quote.ma120,0,2)}"></td>
+        <td th:text="${#numbers.formatDecimal(quote.close/quote.ma120,0,2)}" th:style="${quote.close/quote.ma120 lt 1} ? (${quote.close/quote.ma120 lt 0.8 }? 'color:red;': 'color:orange;') : ''"></td>
+        <td th:text="${#numbers.formatDecimal(quote.rsi5,0,2)}"></td>
+        <td th:text="${#numbers.formatDecimal(quote.rsi10,0,2)}" th:style="${quote.rsi10-quote.rsi5 gt 30} ? 'color:red;': ''"></td>
+        <td th:text="${#numbers.formatDecimal(quote.kdDiff,0,2)}" th:style="${quote.kdDiff lt 20} ? 'color:red;': ''"></td>
         <td th:text="${quote.open}"></td>
         <td th:text="${quote.high}"></td>
         <td th:text="${quote.low}"></td>
-        <td th:text="${#numbers.formatDecimal(quote.rsi5,0,2)}"></td>
-        <td th:text="${#numbers.formatDecimal(quote.ma120,0,2)}"></td>
-        <td th:text="${#numbers.formatDecimal(quote.close*1.25,0,2)}"></td>
-        <td th:text="${#numbers.formatDecimal(quote.close/1.25,0,2)}"></td>
     </tr>
     </tbody>
 </table>
