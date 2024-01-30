@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.ta4j.core.BarSeries;
 import org.ta4j.core.BaseBarSeriesBuilder;
-import org.ta4j.core.indicators.RSIIndicator;
 import org.ta4j.core.indicators.SMAIndicator;
 import org.ta4j.core.indicators.helpers.ClosePriceIndicator;
 import org.ta4j.core.num.Num;
@@ -25,18 +24,6 @@ public class Ta4jIndicatorService {
         }
 
         return barSeries;
-    }
-
-    public RSIIndicator getRSIIndicator(BarSeries barSeries, int barCount) {
-        return new RSIIndicator(new ClosePriceIndicator(barSeries), barCount);
-    }
-
-    public void fillRsiValue(String symbol, List<Quote> quotes, int barCount) {
-        RSIIndicator rsiIndicator = getRSIIndicator(transfer(symbol, quotes), barCount);
-        for (int i = 0; i < quotes.size() / 2; i++) {
-            Num value = rsiIndicator.getValue(quotes.size() - i - 1);
-            quotes.get(i).setRsi5(value.doubleValue());
-        }
     }
 
     public SMAIndicator getSMAIndicator(String symbol, List<Quote> quotes, int count) {

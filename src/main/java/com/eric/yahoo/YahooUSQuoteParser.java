@@ -9,6 +9,7 @@ import com.eric.utils.JsonUtils;
 import com.fasterxml.jackson.core.json.JsonReadFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.jsoup.Connection;
@@ -46,23 +47,26 @@ public class YahooUSQuoteParser implements Parser {
     //"max"
     private static final String RANGE = "1mo";
     private static final String INTERVAL = "1d";
-    private DecimalFormat df = new DecimalFormat("##.00");
+    private final DecimalFormat df = new DecimalFormat("##.00");
 
     private Connection.Response response;
-    private UsSymbol symbol;
-    private String range;
+    @Getter
+    private final UsSymbol symbol;
+    private final String range;
+    private final String interval;
 
-    public YahooUSQuoteParser(UsSymbol symbol, String range) {
+    public YahooUSQuoteParser(UsSymbol symbol, String range, String interval) {
         this.symbol = symbol;
         this.range = range;
+        this.interval = interval;
     }
 
     @Override
     public String getUrl() {
         if (StringUtils.isNotBlank(range)) {
-            return String.format(URL_TEMPLATE, symbol.getSymbol(), range, INTERVAL);
+            return String.format(URL_TEMPLATE, symbol.getSymbol(), range, interval);
         } else {
-            return String.format(URL_TEMPLATE, symbol.getSymbol(), RANGE, INTERVAL);
+            return String.format(URL_TEMPLATE, symbol.getSymbol(), RANGE, interval);
         }
     }
 
@@ -169,7 +173,4 @@ public class YahooUSQuoteParser implements Parser {
         }
     }
 
-    public UsSymbol getSymbol() {
-        return symbol;
-    }
 }

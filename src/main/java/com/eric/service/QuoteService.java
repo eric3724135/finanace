@@ -9,8 +9,6 @@ import com.eric.persist.repo.QuoteRepository;
 import com.eric.yahoo.YahooUSQuoteParser;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Example;
-import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -37,10 +35,12 @@ public class QuoteService {
 
     private Future<?> tweFuture;
     private Future<?> usFuture;
-    private ExecutorService executorService = Executors.newFixedThreadPool(2);
+    private final ExecutorService executorService = Executors.newFixedThreadPool(2);
 
     @Autowired
     private Ta4jIndicatorService indicatorService;
+    @Autowired
+    private AnalysisService analysisService;
 
     public Quote addQuote(Quote quote) {
         QuoteDto dto;
@@ -62,9 +62,7 @@ public class QuoteService {
     public List<Quote> getLatestRSIQuotes(LocalDate date, String source) {
         List<QuoteDto> quotes = quoteRepository.findLatestByDate(date, source);
         List<Quote> results = new ArrayList<>();
-        quotes.forEach(quoteDto -> {
-            results.add(quoteDto.getQuoteObj());
-        });
+        quotes.forEach(quoteDto -> results.add(quoteDto.getQuoteObj()));
         return results;
     }
 
@@ -85,7 +83,7 @@ public class QuoteService {
         ParserResult<Quote> quoteResult = parser.getResult();
         if (quoteResult.isSuccess()) {
             List<Quote> quotes = quoteResult.getResultList();
-            Collections.sort(quotes, (o1, o2) -> o2.getTradeDate().compareTo(o1.getTradeDate()));
+            quotes.sort((o1, o2) -> o2.getTradeDate().compareTo(o1.getTradeDate()));
             return quotes;
         } else {
             return new ArrayList<>();
@@ -93,13 +91,13 @@ public class QuoteService {
 
     }
 
-    public List<Quote> getusQuotesFromSite(Symbol symbol) {
+    public List<Quote> getusQuotesFromSite(Symbol symbol, String interval, String range) {
         //hiStock 查無 查yahoo quote
-        YahooUSQuoteParser yahooUSQuoteParser = new YahooUSQuoteParser(new UsSymbol(symbol.getId(), symbol.getName()), "6mo");
+        YahooUSQuoteParser yahooUSQuoteParser = new YahooUSQuoteParser(new UsSymbol(symbol.getId(), symbol.getName()), range, interval);
         ParserResult<USQuote> usQuoteResult = yahooUSQuoteParser.getResult();
         List<Quote> usResult = new ArrayList<>();
         usQuoteResult.getResultList().forEach(usQuote -> usResult.add(this.convertUSQuote(usQuote)));
-        Collections.sort(usResult, (o1, o2) -> o2.getTradeDate().compareTo(o1.getTradeDate()));
+        usResult.sort((o1, o2) -> o2.getTradeDate().compareTo(o1.getTradeDate()));
         return usResult;
     }
 
@@ -124,43 +122,40 @@ public class QuoteService {
         if (tweFuture != null && !tweFuture.isDone()) {
             return;
         }
-        tweFuture = executorService.submit(() -> {
-            tweSymbols.forEach(symbol -> {
-                tweSymbolCnt++;
-                log.debug("[{}] {} Sync", symbol.getId(), symbol.getName());
-                Quote latestQuote = this.getLatestQuote(symbol.getId());
-                LocalDate today = LocalDate.now();
-                if (today.getDayOfWeek().equals(DayOfWeek.SUNDAY)) {
-                    today = today.minus(2, ChronoUnit.DAYS);
-                }
-                if (today.getDayOfWeek().equals(DayOfWeek.SATURDAY)) {
-                    today = today.minus(1, ChronoUnit.DAYS);
-                }
+        tweFuture = executorService.submit(() -> tweSymbols.forEach(symbol -> {
+            tweSymbolCnt++;
+            log.debug("[{}] {} Sync", symbol.getId(), symbol.getName());
+            Quote latestQuote = this.getLatestQuote(symbol.getId());
+            LocalDate today = LocalDate.now();
+            if (today.getDayOfWeek().equals(DayOfWeek.SUNDAY)) {
+                today = today.minusDays(2);
+            }
+            if (today.getDayOfWeek().equals(DayOfWeek.SATURDAY)) {
+                today = today.minusDays(1);
+            }
 
-                if (latestQuote == null
-                        || latestQuote.getTradeDate().isBefore(today)
-                        || latestQuote.getTradeDate().isEqual(today)) {
-                    List<Quote> quotes = this.getTweQuotesFromSite(symbol.getSymbolObj());
-                    if (quotes == null || quotes.isEmpty()) {
-                        return;
-                    }
-                    Quote quote = quotes.get(0);
-                    if (quote != null && quote.getRsi5() < 20) {
-                        try {
-                            boolean isExist = this.getQuoteExist(quote.getSymbol(), quote.getTradeDate());
-                            if (!isExist) {
-                                Quote result = this.addQuote(quote);
-                                log.info("[{}] {} {} GET", symbol.getId(), symbol.getName(), result.getTradeDate());
-                            }
-                        } catch (Exception e) {
-                            log.error("[{}] exception", symbol.getId(), e);
+            if (latestQuote == null
+                    || latestQuote.getTradeDate().isBefore(today)
+                    || latestQuote.getTradeDate().isEqual(today)) {
+                List<Quote> quotes = this.getTweQuotesFromSite(symbol.getSymbolObj());
+                if (quotes == null || quotes.isEmpty()) {
+                    return;
+                }
+                Quote quote = quotes.get(0);
+                if (quote != null && quote.getRsi5() < 20) {
+                    try {
+                        boolean isExist = this.getQuoteExist(quote.getSymbol(), quote.getTradeDate());
+                        if (!isExist) {
+                            Quote result = this.addQuote(quote);
+                            log.info("[{}] {} {} GET", symbol.getId(), symbol.getName(), result.getTradeDate());
                         }
+                    } catch (Exception e) {
+                        log.error("[{}] exception", symbol.getId(), e);
                     }
                 }
+            }
 
-            });
-
-        });
+        }));
 
     }
 
@@ -171,47 +166,52 @@ public class QuoteService {
         usSymbolSize = usSymbols.size();
         usSymbolCnt = 0;
         if (usFuture != null && !usFuture.isDone()) {
-           return;
+            return;
         }
-        usFuture = executorService.submit(() -> {
+        usFuture = executorService.submit(() -> usSymbols.forEach(usSymbol -> {
+            usSymbolCnt++;
+            log.debug("[{}] {} Sync", usSymbol.getId(), usSymbol.getName());
+            Quote latestQuote = this.getLatestQuote(usSymbol.getId());
+            LocalDate today = LocalDate.now();
+            if (today.getDayOfWeek().equals(DayOfWeek.SUNDAY)) {
+                today = today.minusDays(2);
+            }
+            if (today.getDayOfWeek().equals(DayOfWeek.SATURDAY)) {
+                today = today.minusDays(1);
+            }
 
-            usSymbols.forEach(usSymbol -> {
-                usSymbolCnt++;
-                log.debug("[{}] {} Sync", usSymbol.getId(), usSymbol.getName());
-                Quote latestQuote = this.getLatestQuote(usSymbol.getId());
-                LocalDate today = LocalDate.now();
-                if (today.getDayOfWeek().equals(DayOfWeek.SUNDAY)) {
-                    today = today.minus(2, ChronoUnit.DAYS);
+            if (latestQuote == null || latestQuote.getTradeDate().isBefore(today) || latestQuote.getTradeDate().isEqual(today)) {
+                List<Quote> quotes = this.getusQuotesFromSite(usSymbol.getSymbolObj(), "1d","6mo");
+                if (quotes == null || quotes.isEmpty()) {
+                    return;
                 }
-                if (today.getDayOfWeek().equals(DayOfWeek.SATURDAY)) {
-                    today = today.minus(1, ChronoUnit.DAYS);
-                }
 
-                if (latestQuote == null || latestQuote.getTradeDate().isBefore(today) || latestQuote.getTradeDate().isEqual(today)) {
-                    List<Quote> quotes = this.getusQuotesFromSite(usSymbol.getSymbolObj());
-                    if (quotes == null || quotes.isEmpty()) {
-                        return;
-                    }
-                    this.indicatorService.fillRsiValue(usSymbol.getId(), quotes, 6);
-                    this.indicatorService.fillMa120Value(usSymbol.getId(), quotes);
+                this.analysisService.handleRSI(usSymbol.getSymbolObj(), quotes,6);
+                this.analysisService.handleRSI(usSymbol.getSymbolObj(), quotes,24);
 
-                    Quote quote = quotes.get(0);
-                    if (quote != null && quote.getRsi5() < 20) {
-                        try {
-                            boolean isExist = this.getQuoteExist(quote.getSymbol(), quote.getTradeDate());
-                            if (!isExist) {
-                                Quote result = this.addQuote(quote);
-                                log.info("[{}] {} {} GET", usSymbol.getId(), usSymbol.getName(), result.getTradeDate());
-                            }
+                this.indicatorService.fillMa120Value(usSymbol.getId(), quotes);
 
-                        } catch (Exception e) {
-                            log.error("[{}] exception", usSymbol.getId(), e);
+                Quote quote = quotes.get(0);
+                if (quote != null && quote.getRsi5() < 20) {
+                    try {
+                        boolean isExist = this.getQuoteExist(quote.getSymbol(), quote.getTradeDate());
+                        if (!isExist) {
+                            List<Quote> weekQuotes = this.getusQuotesFromSite(usSymbol.getSymbolObj(), "1wk","1y");
+                            this.analysisService.handleRSI(usSymbol.getSymbolObj(), weekQuotes,6);
+                            //不調整欄位借用kd diff來存週
+                            Quote latestWeekQuote = weekQuotes.get(0);
+                            quote.setKdDiff(latestWeekQuote.getRsi5());
+                            Quote result = this.addQuote(quote);
+                            log.info("[{}] {} {} GET", usSymbol.getId(), usSymbol.getName(), result.getTradeDate());
                         }
+
+                    } catch (Exception e) {
+                        log.error("[{}] exception", usSymbol.getId(), e);
                     }
                 }
+            }
 
-            });
-        });
+        }));
     }
 
 }

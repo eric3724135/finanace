@@ -52,7 +52,7 @@ public class RsiController {
             ParserResult<Quote> quoteResult = parser.getResult();
             if (quoteResult.getResultList() != null && quoteResult.getResultList().size() > 1) {
                 List<Quote> quotes = quoteResult.getResultList();
-                Collections.sort(quotes, (o1, o2) -> o2.getTradeDate().compareTo(o1.getTradeDate()));
+                quotes.sort((o1, o2) -> o2.getTradeDate().compareTo(o1.getTradeDate()));
                 Quote current = quotes.get(0);
                 Quote past = quotes.get(1);
                 double resultValue = RsiUtils.calc(6, past.getClose(), current.getClose(), past.getRsi5(), current.getRsi5(), result.getFutureParam(), "1".equals(result.getFutureType()));
@@ -61,12 +61,12 @@ public class RsiController {
                 result.setCurrent(current);
                 result.setFutureResult(resultValue);
 
-                System.out.println(String.format("股票代碼 %s ", current.getSymbol()));
-                System.out.println(String.format("%s 股價 %s RSI %s", past.getSimpleTradeDateStr(), past.getClose(), String.format("%.2f", past.getRsi5())));
-                System.out.println(String.format("%s 股價 %s RSI %s", current.getSimpleTradeDateStr(), current.getClose(), String.format("%.2f", current.getRsi5())));
-                System.out.println(String.format("預測股價 %s RSI %s",
+                System.out.printf("股票代碼 %s %n", current.getSymbol());
+                System.out.printf("%s 股價 %s RSI %s%n", past.getSimpleTradeDateStr(), past.getClose(), String.format("%.2f", past.getRsi5()));
+                System.out.printf("%s 股價 %s RSI %s%n", current.getSimpleTradeDateStr(), current.getClose(), String.format("%.2f", current.getRsi5()));
+                System.out.printf("預測股價 %s RSI %s%n",
                         "1".equals(result.getFutureType()) ? result.getFutureParam() : String.format("%.2f", resultValue),
-                        "1".equals(result.getFutureType()) ? String.format("%.2f", resultValue) : result.getFutureParam()));
+                        "1".equals(result.getFutureType()) ? String.format("%.2f", resultValue) : result.getFutureParam());
 
             }
 
@@ -99,8 +99,9 @@ public class RsiController {
     public String quoteSearch(Model model, @ModelAttribute("symbol") Symbol symbol) {
         List<Quote> quotes = quoteService.getTweQuotesFromSite(symbol);
         if (quotes == null || quotes.isEmpty()) {
-            quotes = quoteService.getusQuotesFromSite(symbol);
+            quotes = quoteService.getusQuotesFromSite(symbol,"1d","6mo");
             quotes = analysisService.handleRSI(symbol, quotes, 6);
+            quotes = analysisService.handleRSI(symbol, quotes, 24);
         }
         List<Quote> result = quotes.subList(0, quotes.size() > 30 ? 30 : quotes.size() - 1);
         model.addAttribute("quotes", result);
