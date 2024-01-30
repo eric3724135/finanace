@@ -67,7 +67,7 @@
         <td th:text="${quote.name}"></td>
         <td th:text="${quote.close}" ></td>
         <td th:text="${#numbers.formatDecimal(quote.ma120,0,2)}"></td>
-        <td th:text="${#numbers.formatDecimal(quote.close/quote.ma120,0,2)}" th:style="${quote.close/quote.ma120 lt 1} ? (${quote.close/quote.ma120 lt 0.8 }? 'color:red;': 'color:orange;') : ''"></td>
+        <td th:text="${#numbers.formatDecimal(quote.close/quote.ma120,1,2)}" th:style="${quote.close/quote.ma120 lt 1} ? (${quote.close/quote.ma120 lt 0.8 }? 'color:red;': 'color:orange;') : ''"></td>
         <td th:text="${#numbers.formatDecimal(quote.rsi5,0,2)}"></td>
         <td th:text="${#numbers.formatDecimal(quote.rsi10,0,2)}" th:style="${quote.rsi10-quote.rsi5 gt 30} ? 'color:red;': ''"></td>
         <td th:text="${#numbers.formatDecimal(quote.kdDiff,0,2)}" th:style="${quote.kdDiff lt 20} ? 'color:red;': ''"></td>
