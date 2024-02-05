@@ -41,6 +41,18 @@ public class Symbol {
         return symbol;
     }
 
+    public static Symbol ofTW(String id,String name){
+        Symbol symbol = new Symbol(id+".tw",name);
+        symbol.setType(TWE);
+        return symbol;
+    }
+
+    public static Symbol ofTWO(String id,String name){
+        Symbol symbol = new Symbol(id+".two",name);
+        symbol.setType(TWE);
+        return symbol;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

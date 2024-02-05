@@ -32,7 +32,7 @@ import java.util.TimeZone;
 @Slf4j
 public class YahooUSQuoteParser implements Parser {
 
-
+    //台股 ex 2330.tw(上市) 8924.two(櫃買)
     private static final String URL_TEMPLATE = "https://partner-query.finance.yahoo.com/v8/finance/chart/%s?range=%s&interval=%s";
     //"1d",
     //"5d",

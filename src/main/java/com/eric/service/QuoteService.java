@@ -14,7 +14,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -142,10 +141,27 @@ public class QuoteService {
                     return;
                 }
                 Quote quote = quotes.get(0);
+
                 if (quote != null && quote.getRsi5() < 20) {
+                    if (quote.getVolume() * quote.getClose() < 15000) {
+                        log.info("[{}] {} {} 成交值過小不採納", symbol.getId(), symbol.getName(), quote.getVolume() * quote.getClose());
+                        return;
+                    }
                     try {
                         boolean isExist = this.getQuoteExist(quote.getSymbol(), quote.getTradeDate());
                         if (!isExist) {
+                            // rsi 24 week rsi6
+                            this.analysisService.handleRSI(symbol.getSymbolObj(), quotes, 24);
+                            List<Quote> weekQuotes = this.getusQuotesFromSite(Symbol.ofTW(symbol.getId(), symbol.getName()), "1wk", "1y");
+                            if (weekQuotes == null || weekQuotes.isEmpty()) {
+                                weekQuotes = this.getusQuotesFromSite(Symbol.ofTWO(symbol.getId(), symbol.getName()), "1wk", "1y");
+                            }
+                            if (weekQuotes != null && weekQuotes.size() > 30) {
+                                this.analysisService.handleRSI(symbol.getSymbolObj(), weekQuotes, 6);
+                                //不調整欄位借用kd diff來存週
+                                Quote latestWeekQuote = weekQuotes.get(0);
+                                quote.setKdDiff(latestWeekQuote.getRsi5());
+                            }
                             Quote result = this.addQuote(quote);
                             log.info("[{}] {} {} GET", symbol.getId(), symbol.getName(), result.getTradeDate());
                         }
@@ -181,13 +197,13 @@ public class QuoteService {
             }
 
             if (latestQuote == null || latestQuote.getTradeDate().isBefore(today) || latestQuote.getTradeDate().isEqual(today)) {
-                List<Quote> quotes = this.getusQuotesFromSite(usSymbol.getSymbolObj(), "1d","6mo");
+                List<Quote> quotes = this.getusQuotesFromSite(usSymbol.getSymbolObj(), "1d", "6mo");
                 if (quotes == null || quotes.isEmpty()) {
                     return;
                 }
 
-                this.analysisService.handleRSI(usSymbol.getSymbolObj(), quotes,6);
-                this.analysisService.handleRSI(usSymbol.getSymbolObj(), quotes,24);
+                this.analysisService.handleRSI(usSymbol.getSymbolObj(), quotes, 6);
+                this.analysisService.handleRSI(usSymbol.getSymbolObj(), quotes, 24);
 
                 this.indicatorService.fillMa120Value(usSymbol.getId(), quotes);
 
@@ -196,8 +212,8 @@ public class QuoteService {
                     try {
                         boolean isExist = this.getQuoteExist(quote.getSymbol(), quote.getTradeDate());
                         if (!isExist) {
-                            List<Quote> weekQuotes = this.getusQuotesFromSite(usSymbol.getSymbolObj(), "1wk","1y");
-                            this.analysisService.handleRSI(usSymbol.getSymbolObj(), weekQuotes,6);
+                            List<Quote> weekQuotes = this.getusQuotesFromSite(usSymbol.getSymbolObj(), "1wk", "1y");
+                            this.analysisService.handleRSI(usSymbol.getSymbolObj(), weekQuotes, 6);
                             //不調整欄位借用kd diff來存週
                             Quote latestWeekQuote = weekQuotes.get(0);
                             quote.setKdDiff(latestWeekQuote.getRsi5());
