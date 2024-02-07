@@ -19,6 +19,7 @@
         <apache.lang3.version>3.9</apache.lang3.version>
         <ta4j.version>0.15</ta4j.version>
         <poi.version>4.1.1</poi.version>
+        <javax.mail.version>1.6.2</javax.mail.version>
     </properties>
     <dependencies>
 <!--        <dependency>-->
@@ -66,6 +67,11 @@
             <groupId>org.apache.poi</groupId>
             <artifactId>poi-ooxml</artifactId>
             <version>${poi.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.mail</groupId>
+            <artifactId>javax.mail</artifactId>
+            <version>${javax.mail.version}</version>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
