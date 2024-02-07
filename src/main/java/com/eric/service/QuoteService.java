@@ -62,6 +62,7 @@ public class QuoteService {
         List<QuoteDto> quotes = quoteRepository.findLatestByDate(date, source);
         List<Quote> results = new ArrayList<>();
         quotes.forEach(quoteDto -> results.add(quoteDto.getQuoteObj()));
+        results.sort(Comparator.comparingDouble(Quote::getRsi5));
         return results;
     }
 
@@ -147,7 +148,7 @@ public class QuoteService {
                 }
                 Quote quote = quotes.get(0);
 
-                if (quote != null && quote.getRsi5() < 20) {
+                if (quote != null && (quote.getRsi5() < 20 || quote.getRsi5() > 93)) {
                     if (quote.getVolume() * quote.getClose() < 15000) {
                         log.info("[{}] {} {} 成交值過小不採納", symbol.getId(), symbol.getName(), quote.getVolume() * quote.getClose());
                         return;
@@ -213,7 +214,7 @@ public class QuoteService {
                 this.indicatorService.fillMa120Value(usSymbol.getId(), quotes);
 
                 Quote quote = quotes.get(0);
-                if (quote != null && quote.getRsi5() < 20) {
+                if (quote != null && (quote.getRsi5() < 20 || quote.getRsi5() > 93)) {
                     try {
                         boolean isExist = this.getQuoteExist(quote.getSymbol(), quote.getTradeDate());
                         if (!isExist) {
