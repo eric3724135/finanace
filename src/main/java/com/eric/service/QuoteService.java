@@ -97,6 +97,11 @@ public class QuoteService {
         List<Quote> usResult = new ArrayList<>();
         usQuoteResult.getResultList().forEach(usQuote -> usResult.add(this.convertUSQuote(usQuote)));
         usResult.sort((o1, o2) -> o2.getTradeDate().compareTo(o1.getTradeDate()));
+        //發現week quote 可能出現trade date 重複(時間不同)
+        if (usResult.size() > 2 &&
+                usResult.get(0).getTradeDate().isEqual(usResult.get(1).getTradeDate())) {
+            usResult.remove(0);
+        }
         return usResult;
     }
 
