@@ -14,7 +14,7 @@
     <name>finance</name>
     <description>finance</description>
     <properties>
-        <java.version>8</java.version>
+        <java.version>17</java.version>
         <jsoup.version>1.12.1</jsoup.version>
         <apache.lang3.version>3.9</apache.lang3.version>
         <ta4j.version>0.15</ta4j.version>
