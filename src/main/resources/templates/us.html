@@ -17,6 +17,10 @@
             <input type="date" th:field="*{queryDate}"/>
             <button type="submit">更新狀態</button>
         </form>
+        <form action="#" th:action="@{/us/report}" method="get" th:object="${result}">
+            <input type="date" th:field="*{queryDate}"/>
+            <button type="submit">產生報表</button>
+        </form>
     </div>
     <div class="col">
     </div>

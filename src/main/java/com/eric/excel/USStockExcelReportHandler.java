@@ -107,14 +107,7 @@ public class USStockExcelReportHandler {
         }
 
         workbook.write(bos);
-        //寫檔example
-//        try (ByteArrayOutputStream bos = new USStockExcelReportHandler(ta4jIndicatorService).export(reportMap)) {
-//            try (OutputStream outputStream = new FileOutputStream(file)) {
-//                bos.writeTo(outputStream);
-//            }
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
+        workbook.close();
 
         return bos;
     }

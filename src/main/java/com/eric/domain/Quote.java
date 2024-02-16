@@ -154,7 +154,7 @@ public class Quote {
     }
 
     public String getTradeDateStr() {
-        return tradeDate.format(dateTimeFormatter);
+        return tradeDate.format(dateFormatter);
     }
 
     public String getSimpleTradeDateStr() {

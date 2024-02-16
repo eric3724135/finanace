@@ -18,7 +18,7 @@ public class MailUtils {
     private static Properties mailServerProperties = null;
 
 
-    public static void generateAndSendEmail(String[] to, String subject, String msg, String filename, ByteArrayOutputStream bos) throws MessagingException {
+    public static void generateAndSendEmail(MailConfig mailConfig, String[] to, String subject, String msg, String filename, ByteArrayOutputStream bos) throws MessagingException {
 
         if (mailServerProperties == null) {
             // Step1
@@ -41,7 +41,7 @@ public class MailUtils {
         generateMailMessage.setContent(msg, "text/html; charset=UTF-8");
         log.info("Mail Session has been created successfully..");
 
-        //TODO finish add attachment
+        //add attachment
         if (bos != null) {
             Multipart multipart = new MimeMultipart();
             DataSource source = new ByteArrayDataSource(bos.toByteArray(), "application/vnd.ms-excel");
@@ -59,7 +59,7 @@ public class MailUtils {
 
         // Enter your correct gmail UserID and Password
         // if you have 2FA enabled then provide App Specific Password
-        transport.connect("smtp.gmail.com", 587, "sender@gmail.com", "");
+        transport.connect("smtp.gmail.com", 587, mailConfig.getAccount(), mailConfig.getPassword());
         transport.sendMessage(generateMailMessage, generateMailMessage.getAllRecipients());
         transport.close();
     }

@@ -1,7 +1,10 @@
 package com.eric.service;
 
 import com.eric.domain.*;
+import com.eric.excel.USStockExcelReportHandler;
 import com.eric.histock.HiStockDataHandler;
+import com.eric.mail.MailConfig;
+import com.eric.mail.MailUtils;
 import com.eric.parser.ParserResult;
 import com.eric.persist.pojo.QuoteDto;
 import com.eric.persist.pojo.SymbolDto;
@@ -12,8 +15,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import javax.mail.MessagingException;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -40,6 +47,11 @@ public class QuoteService {
     private Ta4jIndicatorService indicatorService;
     @Autowired
     private AnalysisService analysisService;
+
+    @Autowired
+    private MailConfig mailConfig;
+
+    private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyyMMdd");
 
     public Quote addQuote(Quote quote) {
         QuoteDto dto;
@@ -127,57 +139,74 @@ public class QuoteService {
         if (tweFuture != null && !tweFuture.isDone()) {
             return;
         }
-        tweFuture = executorService.submit(() -> tweSymbols.forEach(symbol -> {
-            tweSymbolCnt++;
-            log.debug("[{}] {} Sync", symbol.getId(), symbol.getName());
-            Quote latestQuote = this.getLatestQuote(symbol.getId());
-            LocalDate today = LocalDate.now();
-            if (today.getDayOfWeek().equals(DayOfWeek.SUNDAY)) {
-                today = today.minusDays(2);
-            }
-            if (today.getDayOfWeek().equals(DayOfWeek.SATURDAY)) {
-                today = today.minusDays(1);
-            }
-
-            if (latestQuote == null
-                    || latestQuote.getTradeDate().isBefore(today)
-                    || latestQuote.getTradeDate().isEqual(today)) {
-                List<Quote> quotes = this.getTweQuotesFromSite(symbol.getSymbolObj());
-                if (quotes == null || quotes.isEmpty()) {
-                    return;
+        tweFuture = executorService.submit(() -> {
+            List<Quote> excelQuotes = new ArrayList<>();
+            tweSymbols.forEach(symbol -> {
+                tweSymbolCnt++;
+                log.debug("[{}] {} Sync", symbol.getId(), symbol.getName());
+                Quote latestQuote = this.getLatestQuote(symbol.getId());
+                LocalDate today = LocalDate.now();
+                if (today.getDayOfWeek().equals(DayOfWeek.SUNDAY)) {
+                    today = today.minusDays(2);
                 }
-                Quote quote = quotes.get(0);
+                if (today.getDayOfWeek().equals(DayOfWeek.SATURDAY)) {
+                    today = today.minusDays(1);
+                }
 
-                if (quote != null && (quote.getRsi5() < 20 || quote.getRsi5() > 93)) {
-                    if (quote.getVolume() * quote.getClose() < 15000) {
-                        log.info("[{}] {} {} 成交值過小不採納", symbol.getId(), symbol.getName(), quote.getVolume() * quote.getClose());
+                if (latestQuote == null
+                        || latestQuote.getTradeDate().isBefore(today)
+                        || latestQuote.getTradeDate().isEqual(today)) {
+                    List<Quote> quotes = this.getTweQuotesFromSite(symbol.getSymbolObj());
+                    if (quotes == null || quotes.isEmpty()) {
                         return;
                     }
-                    try {
-                        boolean isExist = this.getQuoteExist(quote.getSymbol(), quote.getTradeDate());
-                        if (!isExist) {
-                            // rsi 24 week rsi6
-                            this.analysisService.handleRSI(symbol.getSymbolObj(), quotes, 24);
-                            List<Quote> weekQuotes = this.getusQuotesFromSite(Symbol.ofTW(symbol.getId(), symbol.getName()), "1wk", "1y");
-                            if (weekQuotes == null || weekQuotes.isEmpty()) {
-                                weekQuotes = this.getusQuotesFromSite(Symbol.ofTWO(symbol.getId(), symbol.getName()), "1wk", "1y");
-                            }
-                            if (weekQuotes != null && weekQuotes.size() > 30) {
-                                this.analysisService.handleRSI(symbol.getSymbolObj(), weekQuotes, 6);
-                                //不調整欄位借用kd diff來存週
-                                Quote latestWeekQuote = weekQuotes.get(0);
-                                quote.setKdDiff(latestWeekQuote.getRsi5());
-                            }
-                            Quote result = this.addQuote(quote);
-                            log.info("[{}] {} {} GET", symbol.getId(), symbol.getName(), result.getTradeDate());
+                    Quote quote = quotes.get(0);
+
+                    if (quote != null && (quote.getRsi5() < 20 || quote.getRsi5() > 93)) {
+                        if (quote.getVolume() * quote.getClose() < 15000) {
+                            log.info("[{}] {} {} 成交值過小不採納", symbol.getId(), symbol.getName(), quote.getVolume() * quote.getClose());
+                            return;
                         }
-                    } catch (Exception e) {
-                        log.error("[{}] exception", symbol.getId(), e);
+                        try {
+                            boolean isExist = this.getQuoteExist(quote.getSymbol(), quote.getTradeDate());
+                            if (!isExist) {
+                                // rsi 24 week rsi6
+                                this.analysisService.handleRSI(symbol.getSymbolObj(), quotes, 24);
+                                List<Quote> weekQuotes = this.getusQuotesFromSite(Symbol.ofTW(symbol.getId(), symbol.getName()), "1wk", "1y");
+                                if (weekQuotes == null || weekQuotes.isEmpty()) {
+                                    weekQuotes = this.getusQuotesFromSite(Symbol.ofTWO(symbol.getId(), symbol.getName()), "1wk", "1y");
+                                }
+                                if (weekQuotes != null && weekQuotes.size() > 30) {
+                                    this.analysisService.handleRSI(symbol.getSymbolObj(), weekQuotes, 6);
+                                    //不調整欄位借用kd diff來存週
+                                    Quote latestWeekQuote = weekQuotes.get(0);
+                                    quote.setKdDiff(latestWeekQuote.getRsi5());
+                                }
+                                Quote result = this.addQuote(quote);
+                                excelQuotes.add(result);
+                                log.info("[{}] {} {} GET", symbol.getId(), symbol.getName(), result.getTradeDate());
+                            }
+                        } catch (Exception e) {
+                            log.error("[{}] exception", symbol.getId(), e);
+                        }
                     }
+                }
+
+            });
+            if (!excelQuotes.isEmpty()) {
+                USStockExcelReportHandler handler = new USStockExcelReportHandler();
+                try {
+                    ByteArrayOutputStream bos = handler.export(excelQuotes);
+                    MailUtils.generateAndSendEmail(mailConfig, mailConfig.getAddressArr(),
+                            String.format("%s_台股每日挑檔", LocalDate.now().format(dateFormatter)),
+                            String.format("%s_台股每日挑檔", LocalDate.now().format(dateFormatter)),
+                            String.format("%s_台股.xlsx", LocalDate.now().format(dateFormatter)), bos);
+                } catch (IOException | MessagingException e) {
+                    log.error("[USStockExcelReportHandler] error ", e);
                 }
             }
 
-        }));
+        });
 
     }
 
@@ -190,50 +219,67 @@ public class QuoteService {
         if (usFuture != null && !usFuture.isDone()) {
             return;
         }
-        usFuture = executorService.submit(() -> usSymbols.forEach(usSymbol -> {
-            usSymbolCnt++;
-            log.debug("[{}] {} Sync", usSymbol.getId(), usSymbol.getName());
-            Quote latestQuote = this.getLatestQuote(usSymbol.getId());
-            LocalDate today = LocalDate.now();
-            if (today.getDayOfWeek().equals(DayOfWeek.SUNDAY)) {
-                today = today.minusDays(2);
-            }
-            if (today.getDayOfWeek().equals(DayOfWeek.SATURDAY)) {
-                today = today.minusDays(1);
-            }
-
-            if (latestQuote == null || latestQuote.getTradeDate().isBefore(today) || latestQuote.getTradeDate().isEqual(today)) {
-                List<Quote> quotes = this.getusQuotesFromSite(usSymbol.getSymbolObj(), "1d", "6mo");
-                if (quotes == null || quotes.isEmpty()) {
-                    return;
+        usFuture = executorService.submit(() -> {
+            List<Quote> excelQuotes = new ArrayList<>();
+            usSymbols.forEach(usSymbol -> {
+                usSymbolCnt++;
+                log.debug("[{}] {} Sync", usSymbol.getId(), usSymbol.getName());
+                Quote latestQuote = this.getLatestQuote(usSymbol.getId());
+                LocalDate today = LocalDate.now();
+                if (today.getDayOfWeek().equals(DayOfWeek.SUNDAY)) {
+                    today = today.minusDays(2);
+                }
+                if (today.getDayOfWeek().equals(DayOfWeek.SATURDAY)) {
+                    today = today.minusDays(1);
                 }
 
-                this.analysisService.handleRSI(usSymbol.getSymbolObj(), quotes, 6);
-                this.analysisService.handleRSI(usSymbol.getSymbolObj(), quotes, 24);
+                if (latestQuote == null || latestQuote.getTradeDate().isBefore(today) || latestQuote.getTradeDate().isEqual(today)) {
+                    List<Quote> quotes = this.getusQuotesFromSite(usSymbol.getSymbolObj(), "1d", "6mo");
+                    if (quotes == null || quotes.isEmpty()) {
+                        return;
+                    }
 
-                this.indicatorService.fillMa120Value(usSymbol.getId(), quotes);
+                    this.analysisService.handleRSI(usSymbol.getSymbolObj(), quotes, 6);
+                    this.analysisService.handleRSI(usSymbol.getSymbolObj(), quotes, 24);
 
-                Quote quote = quotes.get(0);
-                if (quote != null && (quote.getRsi5() < 20 || quote.getRsi5() > 93)) {
-                    try {
-                        boolean isExist = this.getQuoteExist(quote.getSymbol(), quote.getTradeDate());
-                        if (!isExist) {
-                            List<Quote> weekQuotes = this.getusQuotesFromSite(usSymbol.getSymbolObj(), "1wk", "1y");
-                            this.analysisService.handleRSI(usSymbol.getSymbolObj(), weekQuotes, 6);
-                            //不調整欄位借用kd diff來存週
-                            Quote latestWeekQuote = weekQuotes.get(0);
-                            quote.setKdDiff(latestWeekQuote.getRsi5());
-                            Quote result = this.addQuote(quote);
-                            log.info("[{}] {} {} GET", usSymbol.getId(), usSymbol.getName(), result.getTradeDate());
+                    this.indicatorService.fillMa120Value(usSymbol.getId(), quotes);
+
+                    Quote quote = quotes.get(0);
+                    if (quote != null && (quote.getRsi5() < 20 || quote.getRsi5() > 93)) {
+                        try {
+                            boolean isExist = this.getQuoteExist(quote.getSymbol(), quote.getTradeDate());
+                            if (!isExist) {
+                                List<Quote> weekQuotes = this.getusQuotesFromSite(usSymbol.getSymbolObj(), "1wk", "1y");
+                                this.analysisService.handleRSI(usSymbol.getSymbolObj(), weekQuotes, 6);
+                                //不調整欄位借用kd diff來存週
+                                Quote latestWeekQuote = weekQuotes.get(0);
+                                quote.setKdDiff(latestWeekQuote.getRsi5());
+                                Quote result = this.addQuote(quote);
+                                excelQuotes.add(result);
+                                log.info("[{}] {} {} GET", usSymbol.getId(), usSymbol.getName(), result.getTradeDate());
+                            }
+
+                        } catch (Exception e) {
+                            log.error("[{}] exception", usSymbol.getId(), e);
                         }
 
-                    } catch (Exception e) {
-                        log.error("[{}] exception", usSymbol.getId(), e);
                     }
                 }
-            }
 
-        }));
+            });
+            if (!excelQuotes.isEmpty()) {
+                USStockExcelReportHandler handler = new USStockExcelReportHandler();
+                try {
+                    ByteArrayOutputStream bos = handler.export(excelQuotes);
+                    MailUtils.generateAndSendEmail(mailConfig, mailConfig.getAddressArr(),
+                            String.format("%s_美股每日挑檔", LocalDate.now().format(dateFormatter)),
+                            String.format("%s_美股每日挑檔", LocalDate.now().format(dateFormatter)),
+                            String.format("%s_美股.xlsx", LocalDate.now().format(dateFormatter)), bos);
+                } catch (IOException | MessagingException e) {
+                    log.error("[USStockExcelReportHandler] error ", e);
+                }
+            }
+        });
     }
 
 }
