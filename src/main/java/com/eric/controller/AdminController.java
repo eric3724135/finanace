@@ -2,8 +2,12 @@ package com.eric.controller;
 
 import com.eric.domain.*;
 import com.eric.mail.MailConfig;
-import com.eric.mail.MailUtils;
+import com.eric.persist.pojo.SymbolDto;
 import com.eric.service.AdminService;
+import com.eric.service.QuoteService;
+import com.eric.service.StrategyService;
+import com.eric.service.SymbolService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -11,13 +15,22 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 
 import javax.mail.MessagingException;
+import java.util.List;
 
 
+@Slf4j
 @Controller
 public class AdminController {
 
     @Autowired
     private AdminService adminService;
+    @Autowired
+    private SymbolService symbolService;
+    @Autowired
+    private QuoteService quoteService;
+    @Autowired
+    private StrategyService strategyService;
+
     @Autowired
     private MailConfig mailConfig;
 
@@ -60,20 +73,27 @@ public class AdminController {
 
     @PostMapping("/test")
     public String test(Model model) {
+
+        List<SymbolDto> usSymbols = symbolService.getSymbolsFromLocal(SymbolType.US);
+        usSymbols.forEach(usSymbol -> {
+            try {
+                List<Quote> quotes = quoteService.getusQuotesFromSite(usSymbol.getSymbolObj(), "1d", "6mo");
+                if (quotes == null || quotes.isEmpty()) {
+                    return;
+                }
+                boolean isWWay = strategyService.analysisWWayStrategy(quotes);
+                if (isWWay) {
+                    log.info("[{}] w way", usSymbol.getId());
+                }
+            } catch (Exception e) {
+                log.error("[{}] error", usSymbol.getId());
+            }
+
+        });
+        //頁面必須回傳值
         SyncResult result = new SyncResult();
-
-        String[] to = new String[]{"sender@gmail.com"};
-
-        try {
-
-            MailUtils.generateAndSendEmail(mailConfig, to, "test", "test", "test.txt", null);
-            result.setMsg("mail success");
-            model.addAttribute("result", result);
-        } catch (MessagingException e) {
-            result.setMsg(String.format("mail failed %s", e.getMessage()));
-            model.addAttribute("result", result);
-        }
-
+        result.setMsg("test done");
+        model.addAttribute("result", result);
         return "admin";
     }
 

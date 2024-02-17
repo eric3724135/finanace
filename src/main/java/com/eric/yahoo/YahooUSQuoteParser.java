@@ -140,8 +140,8 @@ public class YahooUSQuoteParser implements Parser {
         } catch (Exception e) {
             result.setSuccess(false);
             result.setError(ParserError.JSOUP_PARSE_ERROR);
-            log.error(jsonStr == null ? "" : jsonStr, e);
-            log.error("[{}] {}", getSymbol().getSymbol(), getSymbol().getName(), e);
+//            log.error(jsonStr == null ? "" : jsonStr, e);
+            log.error("[{}] {} {}", getSymbol().getSymbol(), getSymbol().getName(), e.getMessage());
 
         }
         return result;
