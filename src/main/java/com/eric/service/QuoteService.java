@@ -194,6 +194,7 @@ public class QuoteService {
 
             });
             if (!excelQuotes.isEmpty()) {
+                excelQuotes.sort(Comparator.comparing(Quote::getRsi5));
                 USStockExcelReportHandler handler = new USStockExcelReportHandler();
                 try {
                     ByteArrayOutputStream bos = handler.export(excelQuotes);
@@ -268,6 +269,7 @@ public class QuoteService {
 
             });
             if (!excelQuotes.isEmpty()) {
+                excelQuotes.sort(Comparator.comparing(Quote::getRsi5));
                 USStockExcelReportHandler handler = new USStockExcelReportHandler();
                 try {
                     ByteArrayOutputStream bos = handler.export(excelQuotes);
