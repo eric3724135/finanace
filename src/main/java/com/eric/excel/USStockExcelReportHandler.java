@@ -77,6 +77,7 @@ public class USStockExcelReportHandler {
         row.createCell(9).setCellValue("開盤價");
         row.createCell(10).setCellValue("最高價");
         row.createCell(11).setCellValue("最低價");
+        row.createCell(11).setCellValue("成交量");
 
         int num = 1;
         for (Quote quote : quotes) {
@@ -103,7 +104,7 @@ public class USStockExcelReportHandler {
             row.createCell(9).setCellValue(frmt.format(quote.getOpen()));
             row.createCell(10).setCellValue(frmt.format(quote.getHigh()));
             row.createCell(11).setCellValue(frmt.format(quote.getLow()));
-
+            row.createCell(11).setCellValue(quote.getVolume());
         }
 
         workbook.write(bos);

@@ -59,6 +59,7 @@
         <th scope="col"> 開盤價</th>
         <th scope="col"> 最高價</th>
         <th scope="col"> 最低價</th>
+        <th scope="col"> 成交量</th>
     </tr>
     </thead>
     <tbody>
@@ -78,6 +79,7 @@
         <td th:text="${quote.open}"></td>
         <td th:text="${quote.high}"></td>
         <td th:text="${quote.low}"></td>
+        <td th:text="${quote.volume}"></td>
     </tr>
     </tbody>
 </table>
