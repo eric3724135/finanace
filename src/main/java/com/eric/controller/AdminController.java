@@ -2,11 +2,7 @@ package com.eric.controller;
 
 import com.eric.domain.*;
 import com.eric.mail.MailConfig;
-import com.eric.persist.pojo.SymbolDto;
-import com.eric.service.AdminService;
-import com.eric.service.QuoteService;
-import com.eric.service.StrategyService;
-import com.eric.service.SymbolService;
+import com.eric.service.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -14,7 +10,6 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 
-import javax.mail.MessagingException;
 import java.util.List;
 
 
@@ -30,6 +25,8 @@ public class AdminController {
     private QuoteService quoteService;
     @Autowired
     private StrategyService strategyService;
+    @Autowired
+    private AnalysisService analysisService;
 
     @Autowired
     private MailConfig mailConfig;
@@ -74,22 +71,33 @@ public class AdminController {
     @PostMapping("/test")
     public String test(Model model) {
 
-        List<SymbolDto> usSymbols = symbolService.getSymbolsFromLocal(SymbolType.US);
-        usSymbols.forEach(usSymbol -> {
-            try {
-                List<Quote> quotes = quoteService.getusQuotesFromSite(usSymbol.getSymbolObj(), "1d", "6mo");
-                if (quotes == null || quotes.isEmpty()) {
-                    return;
-                }
-                boolean isWWay = strategyService.analysisWWayStrategy(quotes);
-                if (isWWay) {
-                    log.info("[{}] w way", usSymbol.getId());
-                }
-            } catch (Exception e) {
-                log.error("[{}] error", usSymbol.getId());
-            }
+//        List<SymbolDto> usSymbols = symbolService.getSymbolsFromLocal(SymbolType.US);
+//        usSymbols.forEach(usSymbol -> {
+//            try {
+//                List<Quote> quotes = quoteService.getusQuotesFromSite(usSymbol.getSymbolObj(), "1d", "6mo");
+//                if (quotes == null || quotes.isEmpty()) {
+//                    return;
+//                }
+//                //boolean isWWay = strategyService.analysisWWayStrategy(quotes);
+////                if (isWWay) {
+////                    log.info("[{}] w way", usSymbol.getId());
+////                }
+//                boolean isVCPattern = VCPattern.isVCPattern(quotes);
+//                if (isVCPattern) {
+//                    log.info("[{}] is VCPattern", usSymbol.getId());
+//                }
+//            } catch (Exception e) {
+//                log.error("[{}] error", usSymbol.getId());
+//            }
+//
+//        });
+        Symbol symbol = new Symbol("AAPL","apple");
+        symbol.setType(SymbolType.US);
+        List<Quote> quotes = quoteService.getusQuotesFromSite(symbol, "1d", "6mo");
+        this.analysisService.handleRSI(symbol, quotes, 6);
+        List<Quote> weekQuotes = quoteService.getusQuotesFromSite(symbol, "1wk", "1y");
+        this.analysisService.handleRSI(symbol, weekQuotes, 6);
 
-        });
         //頁面必須回傳值
         SyncResult result = new SyncResult();
         result.setMsg("test done");

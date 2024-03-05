@@ -1,6 +1,7 @@
 package com.eric.domain;
 
 import com.eric.persist.pojo.QuoteDto;
+import com.eric.wessiorfinance.util.TLPosition;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -111,6 +112,11 @@ public class Quote {
      * source
      */
     private String source;
+
+    /**
+     * 樂活五線譜狀態
+     */
+    private TLPosition tlPosition;
 
 
 //    @Transient

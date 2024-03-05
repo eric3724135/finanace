@@ -1,6 +1,7 @@
 package com.eric.excel;
 
 import com.eric.domain.Quote;
+import com.eric.wessiorfinance.util.TLStatus;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.common.usermodel.HyperlinkType;
 import org.apache.poi.ss.usermodel.*;
@@ -56,8 +57,8 @@ public class USStockExcelReportHandler {
         XSSFSheet sumSheet = workbook.createSheet("總表");
         sumSheet.autoSizeColumn(0); // 自動調整欄位寬度
         XSSFRow row = sumSheet.createRow(0);
-        sumSheet.setColumnWidth(0, 2000);
-        sumSheet.setColumnWidth(1, 2500);
+        sumSheet.setColumnWidth(0, 3000);
+        sumSheet.setColumnWidth(1, 3000);
         sumSheet.setColumnWidth(2, 3000);
         sumSheet.setColumnWidth(3, 3000);
         sumSheet.setColumnWidth(4, 3000);
@@ -65,6 +66,10 @@ public class USStockExcelReportHandler {
         sumSheet.setColumnWidth(6, 3000);
         sumSheet.setColumnWidth(7, 3000);
         sumSheet.setColumnWidth(8, 3000);
+        sumSheet.setColumnWidth(9, 3000);
+        sumSheet.setColumnWidth(10, 3000);
+        sumSheet.setColumnWidth(11, 3000);
+        sumSheet.setColumnWidth(12, 4500);
         row.createCell(0).setCellValue("日期");
         row.createCell(1).setCellValue("代號");
         row.createCell(2).setCellValue("名稱");
@@ -78,6 +83,7 @@ public class USStockExcelReportHandler {
         row.createCell(10).setCellValue("最高價");
         row.createCell(11).setCellValue("最低價");
         row.createCell(11).setCellValue("成交量");
+        row.createCell(12).setCellValue("樂活五線譜");
 
         int num = 1;
         for (Quote quote : quotes) {
@@ -105,6 +111,15 @@ public class USStockExcelReportHandler {
             row.createCell(10).setCellValue(frmt.format(quote.getHigh()));
             row.createCell(11).setCellValue(frmt.format(quote.getLow()));
             row.createCell(11).setCellValue(quote.getVolume());
+            row.createCell(12).setCellValue(quote.getTlPosition() == null ? "" : quote.getTlPosition().getStatus().getDesc());
+            if (quote.getTlPosition() != null) {
+                TLStatus status = quote.getTlPosition().getStatus();
+                if (TLStatus.LOW_TO_N_2SD.equals(status)) {
+                    row.getCell(12).setCellStyle(redFontCellStyle);
+                } else if (TLStatus.BETWEEN_N_2SD_TO_N_SD.equals(status)) {
+                    row.getCell(12).setCellStyle(orangeFontCellStyle);
+                }
+            }
         }
 
         workbook.write(bos);

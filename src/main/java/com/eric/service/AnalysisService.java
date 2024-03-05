@@ -22,6 +22,9 @@ public class AnalysisService {
         BarSeries series = new BaseBarSeriesBuilder().withName(symbol.getId()).build();
         Collections.reverse(quotes);
         quotes.forEach(cmQuote -> {
+            if (cmQuote.getClose() == 0) {
+                return;
+            }
             try {
                 series.addBar(ZonedDateTime.of(cmQuote.getTradeDate().atStartOfDay(), ZoneId.systemDefault()), cmQuote.getOpen(), cmQuote.getHigh(), cmQuote.getLow(), cmQuote.getClose(), cmQuote.getVolume());
             } catch (Exception e) {

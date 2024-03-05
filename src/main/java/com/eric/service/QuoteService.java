@@ -9,6 +9,7 @@ import com.eric.parser.ParserResult;
 import com.eric.persist.pojo.QuoteDto;
 import com.eric.persist.pojo.SymbolDto;
 import com.eric.persist.repo.QuoteRepository;
+import com.eric.wessiorfinance.util.TLPosition;
 import com.eric.yahoo.YahooUSQuoteParser;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,6 +39,8 @@ public class QuoteService {
 
     @Autowired
     private SymbolService symbolService;
+    @Autowired
+    private WessiorFintechService wessiorService;
 
     private Future<?> tweFuture;
     private Future<?> usFuture;
@@ -163,7 +166,7 @@ public class QuoteService {
                     Quote quote = quotes.get(0);
 
                     if (quote != null && (quote.getRsi5() < 20 || quote.getRsi5() > 93)) {
-                        if (quote.getVolume() * quote.getClose() < 15000) {
+                        if (quote.getVolume() * quote.getClose() < 50000) {
                             log.info("[{}] {} {} 成交值過小不採納", symbol.getId(), symbol.getName(), quote.getVolume() * quote.getClose());
                             return;
                         }
@@ -182,7 +185,15 @@ public class QuoteService {
                                     Quote latestWeekQuote = weekQuotes.get(0);
                                     quote.setKdDiff(latestWeekQuote.getRsi5());
                                 }
+                                TLPosition position = null;
+                                try {
+                                    position = wessiorService.getTLStatus(quote.getSymbolObj(), today);
+
+                                } catch (Exception e) {
+                                    log.error("[{}] {} getTLStatus error", quote.getSymbol(), quote.getName(), e);
+                                }
                                 Quote result = this.addQuote(quote);
+                                result.setTlPosition(position);
                                 excelQuotes.add(result);
                                 log.info("[{}] {} {} GET", symbol.getId(), symbol.getName(), result.getTradeDate());
                             }
@@ -252,10 +263,18 @@ public class QuoteService {
                             if (!isExist) {
                                 List<Quote> weekQuotes = this.getusQuotesFromSite(usSymbol.getSymbolObj(), "1wk", "1y");
                                 this.analysisService.handleRSI(usSymbol.getSymbolObj(), weekQuotes, 6);
+                                TLPosition position = null;
+                                try {
+                                    position = wessiorService.getTLStatus(quote.getSymbolObj(), today);
+
+                                } catch (Exception e) {
+                                    log.error("[{}] {} getTLStatus error", quote.getSymbol(), quote.getName(), e);
+                                }
                                 //不調整欄位借用kd diff來存週
                                 Quote latestWeekQuote = weekQuotes.get(0);
                                 quote.setKdDiff(latestWeekQuote.getRsi5());
                                 Quote result = this.addQuote(quote);
+                                result.setTlPosition(position);
                                 excelQuotes.add(result);
                                 log.info("[{}] {} {} GET", usSymbol.getId(), usSymbol.getName(), result.getTradeDate());
                             }
