@@ -34,13 +34,17 @@ public class AnalysisService {
         });
         ClosePriceIndicator closePrice = new ClosePriceIndicator(series);
         RSIIndicator rsiIndicator = new RSIIndicator(closePrice, rsiValue);
-        int limit = quotes.size() < 31 ? 0 : quotes.size() - 31;
-        for (int i = quotes.size() - 1; i > limit; i--) {
+        int limit = series.getBarCount() < 31 ? 0 : series.getBarCount() - 31;
+        for (int i = series.getBarCount() - 1; i > limit; i--) {
             Quote quote = quotes.get(i);
-            if (rsiValue <= 6) {
-                quote.setRsi5(rsiIndicator.getValue(i).doubleValue());
-            } else {
-                quote.setRsi10(rsiIndicator.getValue(i).doubleValue());
+            try {
+                if (rsiValue <= 6) {
+                    quote.setRsi5(rsiIndicator.getValue(i).doubleValue());
+                } else {
+                    quote.setRsi10(rsiIndicator.getValue(i).doubleValue());
+                }
+            } catch (Exception e) {
+                log.error("[{}] error", quote.getSymbol(), e);
             }
 
         }
