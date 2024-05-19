@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.ta4j.core.BarSeries;
 import org.ta4j.core.BaseBarSeriesBuilder;
+import org.ta4j.core.indicators.ATRIndicator;
 import org.ta4j.core.indicators.SMAIndicator;
 import org.ta4j.core.indicators.helpers.ClosePriceIndicator;
 import org.ta4j.core.num.Num;
@@ -37,6 +38,10 @@ public class Ta4jIndicatorService {
             quotes.get(i).setMa120(value.doubleValue());
         }
 
+    }
+
+    public ATRIndicator getATRIndicator(String symbol, List<Quote> quotes, int count) {
+        return new ATRIndicator(this.transfer(symbol, quotes), count);
     }
 
 }
