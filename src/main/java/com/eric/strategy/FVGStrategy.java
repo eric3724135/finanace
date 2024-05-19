@@ -3,6 +3,7 @@ package com.eric.strategy;
 import com.eric.domain.FVGBox;
 import com.eric.domain.Quote;
 import com.eric.service.Ta4jIndicatorService;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.queue.CircularFifoQueue;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -10,8 +11,8 @@ import org.ta4j.core.indicators.ATRIndicator;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.LinkedBlockingQueue;
 
+@Slf4j
 @Component
 public class FVGStrategy {
 
@@ -99,6 +100,8 @@ public class FVGStrategy {
             downValuesAvg = downValuesSum/downBoxQueue.size();
 
         }
+
+        log.info("End");
 
     }
 }

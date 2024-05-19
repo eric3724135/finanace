@@ -3,6 +3,7 @@ package com.eric.controller;
 import com.eric.domain.*;
 import com.eric.mail.MailConfig;
 import com.eric.service.*;
+import com.eric.strategy.FVGStrategy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -91,12 +92,14 @@ public class AdminController {
 //            }
 //
 //        });
-        Symbol symbol = new Symbol("AAPL","apple");
+        Symbol symbol = new Symbol("AAPL", "apple");
         symbol.setType(SymbolType.US);
         List<Quote> quotes = quoteService.getusQuotesFromSite(symbol, "1d", "6mo");
-        this.analysisService.handleRSI(symbol, quotes, 6);
-        List<Quote> weekQuotes = quoteService.getusQuotesFromSite(symbol, "1wk", "1y");
-        this.analysisService.handleRSI(symbol, weekQuotes, 6);
+//        this.analysisService.handleRSI(symbol, quotes, 6);
+//        List<Quote> weekQuotes = quoteService.getusQuotesFromSite(symbol, "1wk", "1y");
+//        this.analysisService.handleRSI(symbol, weekQuotes, 6);
+        FVGStrategy strategy = new FVGStrategy();
+        strategy.execute(symbol.getId(), quotes);
 
         //頁面必須回傳值
         SyncResult result = new SyncResult();
