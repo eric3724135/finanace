@@ -3,6 +3,7 @@ package com.eric.strategy;
 import com.eric.domain.FVGBox;
 import com.eric.domain.Quote;
 import com.eric.service.Ta4jIndicatorService;
+import com.eric.utils.ATRCalculator;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.queue.CircularFifoQueue;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Component;
 import org.ta4j.core.indicators.ATRIndicator;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Slf4j
@@ -40,24 +42,26 @@ public class FVGStrategy {
 
     public void execute(String symbol, List<Quote> quotes) {
 
-
+        double test = ATRCalculator.calculateAdjustedATR(quotes, 200, 0.25);
         ATRIndicator atrIndicator = ta4jService.getATRIndicator(symbol, quotes, 200);
-        double atr = atrIndicator.getValue(quotes.size() - 1).doubleValue();
         CircularFifoQueue<FVGBox> upBoxQueue = new CircularFifoQueue<>(lookBackNumber);
         CircularFifoQueue<FVGBox> downBoxQueue = new CircularFifoQueue<>(lookBackNumber);
         List<Double> hstList = new ArrayList<>();
         List<Double> lstList = new ArrayList<>();
-
+        Collections.reverse(quotes);
         for (int i = 5; i < quotes.size(); i++) {
+            double atr = atrIndicator.getValue(i).doubleValue();
+//            Bar bar = atrIndicator.getBarSeries().getBar(i);
+            Quote current = quotes.get(i);
 //            fvg_up = low > high[2] and close[ 1] >high[2] and(low - high[2]) > atr
 //            fvg_down = high < low[2] and close[ 1] <low[2] and(low[2] - high) > atr
             boolean fvgUp = quotes.get(i).getLow() > quotes.get(i - 2).getHigh() &&
                     quotes.get(i - 1).getClose() > quotes.get(i - 2).getHigh() &&
-                    (quotes.get(i).getLow() - quotes.get(i - 2).getHigh()) > atrIndicator.getValue(i).doubleValue();
+                    (quotes.get(i).getLow() - quotes.get(i - 2).getHigh()) > quotes.get(i).getClose() * 0.005;
 
             boolean fvgDown = quotes.get(i).getHigh() < quotes.get(i - 2).getLow() &&
                     quotes.get(i - 1).getClose() < quotes.get(i - 2).getLow() &&
-                    (quotes.get(i - 2).getLow() - quotes.get(i).getHigh()) > atrIndicator.getValue(i).doubleValue();
+                    (quotes.get(i - 2).getLow() - quotes.get(i).getHigh()) > quotes.get(i).getClose() * 0.005;
 
 
 //            hst: 计算最近5根K线中的最高值。
@@ -92,13 +96,14 @@ public class FVGStrategy {
             for (FVGBox box : upBoxQueue) {
                 upValuesSum += box.getHigh();
             }
-            upValuesAvg = upValuesSum/upBoxQueue.size();
+            upValuesAvg = upValuesSum / upBoxQueue.size();
 
             for (FVGBox box : downBoxQueue) {
                 downValuesSum += box.getLow();
             }
-            downValuesAvg = downValuesSum/downBoxQueue.size();
+            downValuesAvg = downValuesSum / downBoxQueue.size();
 
+            log.info("[{}] {} upAvg {} downAvg {} fvgUp {} fvgDown {} atr {} ", quotes.get(i).getSymbol(), quotes.get(i).getTradeDateStr(), upValuesAvg, downValuesAvg, fvgUp, fvgDown, atr);
         }
 
         log.info("End");

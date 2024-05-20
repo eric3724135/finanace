@@ -31,6 +31,8 @@ public class AdminController {
 
     @Autowired
     private MailConfig mailConfig;
+    @Autowired
+    private FVGStrategy fvgStrategy;
 
     @GetMapping("/admin")
     public String quoteList(Model model) {
@@ -94,12 +96,11 @@ public class AdminController {
 //        });
         Symbol symbol = new Symbol("AAPL", "apple");
         symbol.setType(SymbolType.US);
-        List<Quote> quotes = quoteService.getusQuotesFromSite(symbol, "1d", "6mo");
+        List<Quote> quotes = quoteService.getusQuotesFromSite(symbol, "1d", "10y");
 //        this.analysisService.handleRSI(symbol, quotes, 6);
 //        List<Quote> weekQuotes = quoteService.getusQuotesFromSite(symbol, "1wk", "1y");
 //        this.analysisService.handleRSI(symbol, weekQuotes, 6);
-        FVGStrategy strategy = new FVGStrategy();
-        strategy.execute(symbol.getId(), quotes);
+        fvgStrategy.execute(symbol.getId(), quotes);
 
         //頁面必須回傳值
         SyncResult result = new SyncResult();
