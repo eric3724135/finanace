@@ -84,18 +84,32 @@ public class FVGStrategy {
 
             if (fvgUp) {
                 upBoxQueue.add(new FVGBox(quotes.get(i), quotes.get(i - 2), quotes.get(i).getLow(), quotes.get(i), quotes.get(i - 2).getHigh()));
+                log.info("ADD UP Box {} ", quotes.get(i).getTradeDate());
             }
             if (fvgDown) {
                 downBoxQueue.add(new FVGBox(quotes.get(i), quotes.get(i - 2), quotes.get(i - 2).getLow(), quotes.get(i), quotes.get(i).getHigh()));
+                log.info("ADD Down Box {} ", quotes.get(i).getTradeDate());
             }
 
             //Bar Count
             if (lookBackType == 0) {
                 // left < bar_index-lb
-                upBoxQueue.removeIf(fvgBox -> current.getTradeDate().minusDays(lookBackNumber).isAfter(fvgBox.getLeftQuote().getTradeDate()));
+                upBoxQueue.removeIf(fvgBox -> {
+                    boolean remove = current.getTradeDate().minusDays(lookBackNumber).isAfter(fvgBox.getLeftQuote().getTradeDate());
+                    if (remove) {
+                        log.info("REMOVE Up Box {} ", fvgBox.getRightQuote().getTradeDate());
+                    }
+                    return remove;
+                });
 
                 // left < bar_index-lb
-                upBoxQueue.removeIf(fvgBox -> current.getTradeDate().minusDays(lookBackNumber).isAfter(fvgBox.getLeftQuote().getTradeDate()));
+                downBoxQueue.removeIf(fvgBox -> {
+                    boolean remove = current.getTradeDate().minusDays(lookBackNumber).isAfter(fvgBox.getLeftQuote().getTradeDate());
+                    if (remove) {
+                        log.info("REMOVE Down Box {} ", fvgBox.getRightQuote().getTradeDate());
+                    }
+                    return remove;
+                });
 
             }
 
@@ -115,7 +129,7 @@ public class FVGStrategy {
             }
             downValuesAvg = downValuesSum / downBoxQueue.size();
 
-            log.info("[{}] {} upAvg {} downAvg {} fvgUp {} fvgDown {} atr {} ", quotes.get(i).getSymbol(), quotes.get(i).getTradeDateStr(), upValuesAvg, downValuesAvg, fvgUp, fvgDown, atr);
+            log.info("[{}] {} upAvg {} downAvg {} fvgUp {} fvgDown {} upBoxQueue {} downBoxQueue {}", quotes.get(i).getSymbol(), quotes.get(i).getTradeDateStr(), upValuesAvg, downValuesAvg, fvgUp, fvgDown, upBoxQueue.size(), downBoxQueue.size());
         }
 
         log.info("End");
