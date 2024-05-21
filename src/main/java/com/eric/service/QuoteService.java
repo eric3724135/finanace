@@ -191,6 +191,7 @@ public class QuoteService {
 
                                 } catch (Exception e) {
                                     log.error("[{}] {} getTLStatus error", quote.getSymbol(), quote.getName(), e);
+                                    //TODO fix plan
                                 }
                                 Quote result = this.addQuote(quote);
                                 result.setTlPosition(position);

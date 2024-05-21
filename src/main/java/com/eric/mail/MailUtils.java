@@ -62,6 +62,7 @@ public class MailUtils {
         transport.connect("smtp.gmail.com", 587, mailConfig.getAccount(), mailConfig.getPassword());
         transport.sendMessage(generateMailMessage, generateMailMessage.getAllRecipients());
         transport.close();
+        log.info("\n\n 4rd ===> Send mail complete");
     }
 
 }

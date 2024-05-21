@@ -28,6 +28,8 @@ public class AdminController {
     private StrategyService strategyService;
     @Autowired
     private AnalysisService analysisService;
+    @Autowired
+    private WessiorFintechService wessiorFintechService;
 
     @Autowired
     private MailConfig mailConfig;

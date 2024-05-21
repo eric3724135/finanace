@@ -1,5 +1,6 @@
 package com.eric.service;
 
+import com.eric.domain.Quote;
 import com.eric.domain.Symbol;
 import com.eric.parser.ParserResult;
 import com.eric.wessiorfinance.WFTLDataHandler;
@@ -18,6 +19,33 @@ import java.util.List;
 @Slf4j
 @Service
 public class WessiorFintechService {
+
+    public TLPosition calStandardDeviation(List<Quote> quotes) {
+        double mean = 0;
+        double sum = 0;
+
+        for (Quote quote : quotes) {
+            sum += quote.getClose();
+        }
+
+        mean = sum / quotes.size();
+        sum = 0;
+
+        for (Quote quote : quotes) {
+            sum += Math.pow(quote.getClose() - mean, 2);
+        }
+        double std = Math.sqrt(sum / quotes.size());
+        Quote quote = quotes.get(0);
+        WessiorFintechTL tl = new WessiorFintechTL();
+        tl.setSymbol(quote.getSymbolObj());
+        tl.setDate(quote.getTradeDate());
+        tl.setTl(mean);
+        tl.setClose(quote.getClose());
+        tl.setStd(std);
+        tl.setDeviation(0); //不知道作用
+
+        return new TLPosition(tl);
+    }
 
     public TLPosition getTLStatus(Symbol symbol, LocalDate date) {
 
