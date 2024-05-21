@@ -12,6 +12,7 @@ import org.ta4j.core.indicators.ATRIndicator;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
 @Slf4j
@@ -79,7 +80,8 @@ public class FVGStrategy {
             }
             hstList.add(hst);
             lstList.add(lst);
-//繪圖ＦＶＧ
+//FVG 找出區塊
+
             if (fvgUp) {
                 upBoxQueue.add(new FVGBox(quotes.get(i), quotes.get(i - 2), quotes.get(i).getLow(), quotes.get(i), quotes.get(i - 2).getHigh()));
             }
@@ -87,11 +89,21 @@ public class FVGStrategy {
                 downBoxQueue.add(new FVGBox(quotes.get(i), quotes.get(i - 2), quotes.get(i - 2).getLow(), quotes.get(i), quotes.get(i).getHigh()));
             }
 
+            //Bar Count
+            if (lookBackType == 0) {
+                // left < bar_index-lb
+                upBoxQueue.removeIf(fvgBox -> current.getTradeDate().minusDays(lookBackNumber).isAfter(fvgBox.getLeftQuote().getTradeDate()));
+
+                // left < bar_index-lb
+                upBoxQueue.removeIf(fvgBox -> current.getTradeDate().minusDays(lookBackNumber).isAfter(fvgBox.getLeftQuote().getTradeDate()));
+
+            }
+
 
             double upValuesSum = 0;
-            double upValuesAvg = 0;
+            double upValuesAvg;
             double downValuesSum = 0;
-            double downValuesAvg = 0;
+            double downValuesAvg;
 
             for (FVGBox box : upBoxQueue) {
                 upValuesSum += box.getHigh();
