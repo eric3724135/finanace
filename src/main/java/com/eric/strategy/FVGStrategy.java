@@ -95,18 +95,23 @@ public class FVGStrategy {
             if (lookBackType == 0) {
                 // left < bar_index-lb
                 upBoxQueue.removeIf(fvgBox -> {
-                    boolean remove = current.getTradeDate().minusDays(lookBackNumber).isAfter(fvgBox.getLeftQuote().getTradeDate());
+                    int deadLine = quotes.indexOf(current) - lookBackNumber;
+                    int check = quotes.indexOf(fvgBox.getLeftQuote());
+                    boolean remove = deadLine > check;
                     if (remove) {
-                        log.info("REMOVE Up Box {} ", fvgBox.getRightQuote().getTradeDate());
+                        //log.info("REMOVE Up Box {} deadLine {}  index {}", fvgBox.getRightQuote().getTradeDate(), deadLine, check);
                     }
                     return remove;
                 });
 
                 // left < bar_index-lb
                 downBoxQueue.removeIf(fvgBox -> {
-                    boolean remove = current.getTradeDate().minusDays(lookBackNumber).isAfter(fvgBox.getLeftQuote().getTradeDate());
+                    int deadLine = quotes.indexOf(current) - lookBackNumber;
+                    int check = quotes.indexOf(fvgBox.getLeftQuote());
+                    boolean remove = quotes.indexOf(current) - lookBackNumber > quotes.indexOf(fvgBox.getLeftQuote());
                     if (remove) {
-                        log.info("REMOVE Down Box {} ", fvgBox.getRightQuote().getTradeDate());
+                        log.info("REMOVE Down Box {} deadLine {}  index {}", fvgBox.getRightQuote().getTradeDate(), deadLine, check);
+
                     }
                     return remove;
                 });
@@ -130,6 +135,12 @@ public class FVGStrategy {
             downValuesAvg = downValuesSum / downBoxQueue.size();
 
             log.info("[{}] {} upAvg {} downAvg {} fvgUp {} fvgDown {} upBoxQueue {} downBoxQueue {}", quotes.get(i).getSymbol(), quotes.get(i).getTradeDateStr(), upValuesAvg, downValuesAvg, fvgUp, fvgDown, upBoxQueue.size(), downBoxQueue.size());
+            StringBuilder stringBuilder = new StringBuilder();
+            for (FVGBox box : downBoxQueue) {
+                stringBuilder.append(box.getQuote().getTradeDateStr());
+                stringBuilder.append("|");
+            }
+            log.info("down queue {}",stringBuilder.toString());
         }
 
         log.info("End");
