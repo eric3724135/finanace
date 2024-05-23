@@ -132,14 +132,15 @@ public class AdminController {
 //            }
 //
 //        });
-        Symbol symbol = new Symbol("2330.tw", "tsmc");
-        symbol.setType(SymbolType.US);
-        List<Quote> quotes = quoteService.getusQuotesFromSite(symbol, "1d", "6mo");
-//        this.analysisService.handleRSI(symbol, quotes, 6);
-//        List<Quote> weekQuotes = quoteService.getusQuotesFromSite(symbol, "1wk", "1y");
-//        this.analysisService.handleRSI(symbol, weekQuotes, 6);
-        List<FVGResult> results = fvgStrategy.execute(symbol.getId(), quotes);
-        Collections.reverse(results);
+        //-----------------------FVG Strategy------------------
+//        Symbol symbol = new Symbol("2330.tw", "tsmc");
+//        symbol.setType(SymbolType.US);
+//        List<Quote> quotes = quoteService.getusQuotesFromSite(symbol, "1d", "6mo");
+//        List<FVGResult> results = fvgStrategy.execute(symbol.getId(), quotes);
+//        Collections.reverse(results);
+        //-----------------------FVG Strategy------------------
+        strategyService.scheduleFVGStrategy();
+
         //頁面必須回傳值
         this.setDefaultModel(model);
         SyncResult result = (SyncResult) model.getAttribute("result");

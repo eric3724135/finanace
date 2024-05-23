@@ -47,6 +47,7 @@ public class FVGStrategy {
     /**
      * lookBackType 計算資料方式 FVG 數量 bar數量
      * lookBackNumber 回推計算多少筆資料
+     *
      * @param symbol symbol
      * @param quotes quotes
      * @return List<FVGResult>
@@ -71,7 +72,7 @@ public class FVGStrategy {
         return this.executeMain(symbol, quotes);
     }
 
-    public List<FVGResult> executeMain(String symbol, List<Quote> quotes) {
+    private List<FVGResult> executeMain(String symbol, List<Quote> quotes) {
         List<FVGResult> results = new ArrayList<>();
         ATRIndicator atrIndicator = ta4jService.getATRIndicator(symbol, quotes, 200);
         CircularFifoQueue<FVGBox> upBoxQueue = new CircularFifoQueue<>(lookBackNumber);
@@ -137,7 +138,7 @@ public class FVGStrategy {
             }
             downValuesAvg = downValuesSum / downBoxQueue.size();
 
-            log.info("[{}] {} upAvg {} downAvg {} fvgUp {} fvgDown {} upBoxQueue {} downBoxQueue {}", quotes.get(i).getSymbol(), quotes.get(i).getTradeDateStr(), upValuesAvg, downValuesAvg, fvgUp, fvgDown, upBoxQueue.size(), downBoxQueue.size());
+            log.debug("[{}] {} upAvg {} downAvg {} fvgUp {} fvgDown {} upBoxQueue {} downBoxQueue {}", quotes.get(i).getSymbol(), quotes.get(i).getTradeDateStr(), upValuesAvg, downValuesAvg, fvgUp, fvgDown, upBoxQueue.size(), downBoxQueue.size());
 //            StringBuilder stringBuilder = new StringBuilder();
 //            for (FVGBox box : downBoxQueue) {
 //                stringBuilder.append(box.getQuote().getTradeDateStr());
@@ -164,6 +165,8 @@ public class FVGStrategy {
 
 
             FVGResult result = new FVGResult();
+            result.setTradeDate(current.getTradeDate());
+            result.setClose(current.getClose());
             result.setHighest(hst);
             result.setLowest(lst);
             result.setUpAvgValue(upValuesAvg);
@@ -174,7 +177,7 @@ public class FVGStrategy {
             results.add(result);
         }
 
-        log.info("End");
+        log.info("[{}]  End", symbol);
 
         return results;
     }

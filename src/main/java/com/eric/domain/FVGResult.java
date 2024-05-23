@@ -2,6 +2,7 @@ package com.eric.domain;
 
 import lombok.Data;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -10,6 +11,11 @@ public class FVGResult {
 
     private FVGPosition position;
 
+    private LocalDate tradeDate;
+    /**
+     * 收盤價
+     */
+    private double close;
     /**
      * 5日內最高價
      */

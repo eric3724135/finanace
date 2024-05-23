@@ -33,8 +33,12 @@ public class FavoriteSymbolDto {
         this.type = type;
     }
 
-    public Symbol getSymbolObj(){
-        Symbol symbol = new Symbol(id,name);
+    public String getYahooSymbolId() {
+        return id + ".tw";
+    }
+
+    public Symbol getSymbolObj() {
+        Symbol symbol = new Symbol(id, name);
         symbol.setType(SymbolType.getByCode(type));
         return symbol;
     }
