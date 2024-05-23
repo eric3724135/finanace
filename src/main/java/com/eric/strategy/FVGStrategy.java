@@ -1,6 +1,8 @@
 package com.eric.strategy;
 
 import com.eric.domain.FVGBox;
+import com.eric.domain.FVGPosition;
+import com.eric.domain.FVGResult;
 import com.eric.domain.Quote;
 import com.eric.service.Ta4jIndicatorService;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +22,10 @@ public class FVGStrategy {
     @Autowired
     private Ta4jIndicatorService ta4jService;
 
+    private static final int DEFAULT_LOOK_BACK_NUMBER = 30;
+
+    private static final int DEFAULT_LOOK_BACK_TYPE = 0;
+
     /**
      * Determines how many FVGs to consider for calculating the averages.
      * 用于确定在计算平均值时考虑多少个FVG（Fair Value Gaps）。
@@ -38,14 +44,38 @@ public class FVGStrategy {
      */
     private double atrMulti = 0.25;
 
+    /**
+     * lookBackType 計算資料方式 FVG 數量 bar數量
+     * lookBackNumber 回推計算多少筆資料
+     * @param symbol symbol
+     * @param quotes quotes
+     * @return List<FVGResult>
+     */
+    public List<FVGResult> execute(String symbol, List<Quote> quotes, int lookBackNumber, int lookBackType) {
+        this.lookBackType = lookBackType;
+        this.lookBackNumber = lookBackNumber;
+        return this.executeMain(symbol, quotes);
+    }
 
-    public void execute(String symbol, List<Quote> quotes) {
+    /**
+     * lookBackType = 0(Bar Count) default
+     * lookBackNumber = 30 default
+     *
+     * @param symbol symbol
+     * @param quotes quotes
+     * @return List<FVGResult>
+     */
+    public List<FVGResult> execute(String symbol, List<Quote> quotes) {
+        this.lookBackType = DEFAULT_LOOK_BACK_TYPE;
+        this.lookBackNumber = DEFAULT_LOOK_BACK_NUMBER;
+        return this.executeMain(symbol, quotes);
+    }
 
+    public List<FVGResult> executeMain(String symbol, List<Quote> quotes) {
+        List<FVGResult> results = new ArrayList<>();
         ATRIndicator atrIndicator = ta4jService.getATRIndicator(symbol, quotes, 200);
         CircularFifoQueue<FVGBox> upBoxQueue = new CircularFifoQueue<>(lookBackNumber);
         CircularFifoQueue<FVGBox> downBoxQueue = new CircularFifoQueue<>(lookBackNumber);
-        List<Double> hstList = new ArrayList<>();
-        List<Double> lstList = new ArrayList<>();
         Collections.reverse(quotes);
         for (int i = 5; i < quotes.size(); i++) {
             double atr = atrIndicator.getValue(i).doubleValue();
@@ -72,44 +102,23 @@ public class FVGStrategy {
                     lst = quote.getLow();
                 }
             }
-            hstList.add(hst);
-            lstList.add(lst);
-//FVG 找出區塊
+            //FVG 找出區塊
 
             if (fvgUp) {
                 upBoxQueue.add(new FVGBox(quotes.get(i), quotes.get(i - 2), quotes.get(i).getLow(), quotes.get(i), quotes.get(i - 2).getHigh()));
-                log.info("ADD UP Box {} ", quotes.get(i).getTradeDate());
+                log.debug("ADD UP Box {} ", quotes.get(i).getTradeDate());
             }
             if (fvgDown) {
                 downBoxQueue.add(new FVGBox(quotes.get(i), quotes.get(i - 2), quotes.get(i - 2).getLow(), quotes.get(i), quotes.get(i).getHigh()));
-                log.info("ADD Down Box {} ", quotes.get(i).getTradeDate());
+                log.debug("ADD Down Box {} ", quotes.get(i).getTradeDate());
             }
 
             //Bar Count
             if (lookBackType == 0) {
                 // left < bar_index-lb
-                upBoxQueue.removeIf(fvgBox -> {
-                    int deadLine = quotes.indexOf(current) - lookBackNumber;
-                    int check = quotes.indexOf(fvgBox.getLeftQuote());
-                    boolean remove = deadLine > check;
-                    if (remove) {
-                        log.info("REMOVE Up Box {} deadLine {}  index {}", fvgBox.getRightQuote().getTradeDate(), deadLine, check);
-                    }
-                    return remove;
-                });
-
+                upBoxQueue.removeIf(fvgBox -> quotes.indexOf(current) - lookBackNumber > quotes.indexOf(fvgBox.getLeftQuote()));
                 // left < bar_index-lb
-                downBoxQueue.removeIf(fvgBox -> {
-                    int deadLine = quotes.indexOf(current) - lookBackNumber;
-                    int check = quotes.indexOf(fvgBox.getLeftQuote());
-                    boolean remove = quotes.indexOf(current) - lookBackNumber > quotes.indexOf(fvgBox.getLeftQuote());
-                    if (remove) {
-                        log.info("REMOVE Down Box {} deadLine {}  index {}", fvgBox.getRightQuote().getTradeDate(), deadLine, check);
-
-                    }
-                    return remove;
-                });
-
+                downBoxQueue.removeIf(fvgBox -> quotes.indexOf(current) - lookBackNumber > quotes.indexOf(fvgBox.getLeftQuote()));
             }
 
 
@@ -129,15 +138,44 @@ public class FVGStrategy {
             downValuesAvg = downValuesSum / downBoxQueue.size();
 
             log.info("[{}] {} upAvg {} downAvg {} fvgUp {} fvgDown {} upBoxQueue {} downBoxQueue {}", quotes.get(i).getSymbol(), quotes.get(i).getTradeDateStr(), upValuesAvg, downValuesAvg, fvgUp, fvgDown, upBoxQueue.size(), downBoxQueue.size());
-            StringBuilder stringBuilder = new StringBuilder();
-            for (FVGBox box : downBoxQueue) {
-                stringBuilder.append(box.getQuote().getTradeDateStr());
-                stringBuilder.append("|");
+//            StringBuilder stringBuilder = new StringBuilder();
+//            for (FVGBox box : downBoxQueue) {
+//                stringBuilder.append(box.getQuote().getTradeDateStr());
+//                stringBuilder.append("|");
+//            }
+//            log.debug("down queue {}", stringBuilder.toString());
+
+            // strategy 判斷進出場
+            FVGResult lastResult = results.isEmpty() ? null : results.get(results.size() - 1);
+            FVGPosition lastPosition = lastResult == null ? FVGPosition.EMPTY : lastResult.getPosition();
+            FVGPosition position = FVGPosition.EMPTY;
+            if (current.getClose() > downValuesAvg && FVGPosition.EMPTY.equals(lastPosition)) {
+                //當價格突破熊市平均 買入
+                position = FVGPosition.BUY;
+            } else if (FVGPosition.BUY.equals(lastPosition) || FVGPosition.HOLD.equals(lastPosition)) {
+                if (current.getClose() < upValuesAvg) {
+                    //當價格跌破牛市平均 賣出
+                    position = FVGPosition.SELL;
+                } else {
+                    //持有但不到賣出標準
+                    position = FVGPosition.HOLD;
+                }
             }
-            log.info("down queue {}", stringBuilder.toString());
+
+
+            FVGResult result = new FVGResult();
+            result.setHighest(hst);
+            result.setLowest(lst);
+            result.setUpAvgValue(upValuesAvg);
+            result.setDownAvgValue(downValuesAvg);
+            result.setPosition(position);
+            result.getUpBoxList().addAll(upBoxQueue.stream().toList());
+            result.getDownBoxList().addAll(downBoxQueue.stream().toList());
+            results.add(result);
         }
 
         log.info("End");
 
+        return results;
     }
 }

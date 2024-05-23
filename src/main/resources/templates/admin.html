@@ -21,6 +21,12 @@
 <form action="#" th:action="@{/us}" method="post" th:object="${result}">
     <button type="submit">美股手動同步</button>
 </form>
+<br/>
+<form action="#" th:action="@{/favorite}" method="post" th:object="${symbol}">
+    <label>新增關注股票代碼 :</label>
+    <input type="text" th:field="*{id}"/>
+    <button type="submit">新增</button>
+</form>
 <form action="#" th:action="@{/test}" method="post" th:object="${result}">
     <button type="submit">測試</button>
 </form>

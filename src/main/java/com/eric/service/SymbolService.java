@@ -5,7 +5,9 @@ import com.eric.domain.SymbolType;
 import com.eric.histock.HiStockSymbolParser;
 import com.eric.mdj.MDJSP500USSymbolParser;
 import com.eric.parser.ParserResult;
+import com.eric.persist.pojo.FavoriteSymbolDto;
 import com.eric.persist.pojo.SymbolDto;
+import com.eric.persist.repo.FavoriteSymbolRepository;
 import com.eric.persist.repo.SymbolRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +22,8 @@ public class SymbolService {
 
     @Autowired
     private SymbolRepository symbolRepository;
+    @Autowired
+    private FavoriteSymbolRepository favoriteSymbolRepository;
 
     //
     public List<Symbol> getTWESymbols() {
@@ -60,4 +64,18 @@ public class SymbolService {
         SymbolDto symbolDto = symbolRepository.save(new SymbolDto(symbol.getId(), symbol.getName(), symbol.getType().getCode()));
         return symbolDto;
     }
+
+    public FavoriteSymbolDto addFavoriteSymbol(String id) {
+        Symbol symbol = this.getSymbol(id);
+        if (symbol == null) {
+            return null;
+        }
+        FavoriteSymbolDto symbolDto = favoriteSymbolRepository.save(new FavoriteSymbolDto(symbol.getId(), symbol.getName(), symbol.getType().getCode()));
+        return symbolDto;
+    }
+
+    public List<FavoriteSymbolDto> getFavoriteSymbols(SymbolType type) {
+        return favoriteSymbolRepository.findByType(type.getCode());
+    }
+
 }
