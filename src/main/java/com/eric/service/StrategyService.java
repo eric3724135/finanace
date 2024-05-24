@@ -43,35 +43,34 @@ public class StrategyService {
         for (FavoriteSymbolDto favoriteSymbolDto : tweList) {
             Symbol symbol = Symbol.ofTW(favoriteSymbolDto.getId(), favoriteSymbolDto.getName());
             List<Quote> quotes = new ArrayList<>();
-            try {
-                quotes = quoteService.getusQuotesFromSite(symbol, "1d", "6mo");
-            } catch (Exception e) {
+            quotes = quoteService.getusQuotesFromSite(symbol, "1d", "6mo");
+            if (quotes == null || quotes.isEmpty()) {
                 symbol = Symbol.ofTWO(favoriteSymbolDto.getId(), favoriteSymbolDto.getName());
-                try {
-                    quotes = quoteService.getusQuotesFromSite(symbol, "1d", "6mo");
-                } catch (Exception e2) {
-                    log.error("[{}] fetch error", symbol.getId(), e2);
-                    continue;
-                }
+                quotes = quoteService.getusQuotesFromSite(symbol, "1d", "6mo");
             }
             if (quotes == null || quotes.size() < 10) {
                 continue;
             }
             List<FVGResult> results = strategy.execute(symbol.getId(), quotes);
 
-            FVGResult result = results.get(results.size() - 1);
-            if (FVGPosition.BUY.equals(result.getPosition())) {
-                //寫入紀錄
-                List<FVGRecordDto> records = fvgRecordRepository.findByIdAndTradeDate(symbol.getId(), result.getTradeDate());
-                if (records.isEmpty()) {
-                    FVGRecordDto record = new FVGRecordDto();
-                    record.setId(favoriteSymbolDto.getId());
-                    record.setName(favoriteSymbolDto.getName());
-                    record.setTradeDate(result.getTradeDate());
-                    record.setClose(result.getClose());
-                    record.setUpAvg(result.getUpAvgValue());
-                    record.setDownAvg(record.getDownAvg());
-                    fvgRecordRepository.save(record);
+//            FVGResult result = results.get(results.size() - 1);
+            for (int i = results.size() - 10; i < results.size() - 1; i++) {
+                FVGResult result = results.get(i);
+
+                if (FVGPosition.BUY.equals(result.getPosition()) || FVGPosition.SELL.equals(result.getPosition())) {
+                    //寫入紀錄
+                    List<FVGRecordDto> records = fvgRecordRepository.findByIdAndTradeDate(symbol.getId(), result.getTradeDate());
+                    if (records.isEmpty()) {
+                        FVGRecordDto record = new FVGRecordDto();
+                        record.setId(favoriteSymbolDto.getId());
+                        record.setName(favoriteSymbolDto.getName());
+                        record.setTradeDate(result.getTradeDate());
+                        record.setClose(result.getClose());
+                        record.setUpAvg(result.getUpAvgValue());
+                        record.setDownAvg(record.getDownAvg());
+                        record.setPosition(result.getPosition().getName());
+                        fvgRecordRepository.save(record);
+                    }
                 }
             }
         }
@@ -83,19 +82,24 @@ public class StrategyService {
             }
             List<FVGResult> results = strategy.execute(symbol.getId(), quotes);
 
-            FVGResult result = results.get(results.size() - 1);
-            if (FVGPosition.BUY.equals(result.getPosition())) {
-                //寫入紀錄
-                List<FVGRecordDto> records = fvgRecordRepository.findByIdAndTradeDate(symbol.getId(), result.getTradeDate());
-                if (records.isEmpty()) {
-                    FVGRecordDto record = new FVGRecordDto();
-                    record.setId(favoriteSymbolDto.getId());
-                    record.setName(favoriteSymbolDto.getName());
-                    record.setTradeDate(result.getTradeDate());
-                    record.setClose(result.getClose());
-                    record.setUpAvg(result.getUpAvgValue());
-                    record.setDownAvg(record.getDownAvg());
-                    fvgRecordRepository.save(record);
+//            FVGResult result = results.get(results.size() - 1);
+            for (int i = results.size() - 10; i < results.size() - 1; i++) {
+                FVGResult result = results.get(i);
+
+                if (FVGPosition.BUY.equals(result.getPosition()) || FVGPosition.SELL.equals(result.getPosition())) {
+                    //寫入紀錄
+                    List<FVGRecordDto> records = fvgRecordRepository.findByIdAndTradeDate(symbol.getId(), result.getTradeDate());
+                    if (records.isEmpty()) {
+                        FVGRecordDto record = new FVGRecordDto();
+                        record.setId(favoriteSymbolDto.getId());
+                        record.setName(favoriteSymbolDto.getName());
+                        record.setTradeDate(result.getTradeDate());
+                        record.setClose(result.getClose());
+                        record.setUpAvg(result.getUpAvgValue());
+                        record.setDownAvg(record.getDownAvg());
+                        record.setPosition(result.getPosition().getName());
+                        fvgRecordRepository.save(record);
+                    }
                 }
             }
         }

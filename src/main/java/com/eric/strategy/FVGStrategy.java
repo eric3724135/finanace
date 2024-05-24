@@ -150,16 +150,23 @@ public class FVGStrategy {
             FVGResult lastResult = results.isEmpty() ? null : results.get(results.size() - 1);
             FVGPosition lastPosition = lastResult == null ? FVGPosition.EMPTY : lastResult.getPosition();
             FVGPosition position = FVGPosition.EMPTY;
-            if (current.getClose() > downValuesAvg && FVGPosition.EMPTY.equals(lastPosition)) {
+            if (downValuesAvg > 0 && current.getClose() > downValuesAvg && FVGPosition.EMPTY.equals(lastPosition)) {
                 //當價格突破熊市平均 買入
                 position = FVGPosition.BUY;
             } else if (FVGPosition.BUY.equals(lastPosition) || FVGPosition.HOLD.equals(lastPosition)) {
-                if (current.getClose() < upValuesAvg) {
-                    //當價格跌破牛市平均 賣出
-                    position = FVGPosition.SELL;
+                if (upValuesAvg == 0) {
+                    if(current.getClose() < lst){
+                        //當價格無牛市平均參考 低於5日最低價則賣出
+                        position = FVGPosition.SELL;
+                    }
                 } else {
-                    //持有但不到賣出標準
-                    position = FVGPosition.HOLD;
+                    if (current.getClose() < upValuesAvg) {
+                        //當價格跌破牛市平均 賣出
+                        position = FVGPosition.SELL;
+                    } else {
+                        //持有但不到賣出標準
+                        position = FVGPosition.HOLD;
+                    }
                 }
             }
 

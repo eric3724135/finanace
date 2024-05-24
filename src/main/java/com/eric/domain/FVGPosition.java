@@ -9,7 +9,7 @@ public enum FVGPosition {
     EMPTY("空手"),
 
     BUY("買入"),
-    SELL("買入");
+    SELL("售出");
 
     private String name;
 

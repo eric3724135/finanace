@@ -46,6 +46,9 @@ public class FVGRecordDto {
     @Column(name = "down_avg")
     private double downAvg;
 
+    @Column(name = "position")
+    private String position;
+
     public FVGRecordDto() {
     }
 
