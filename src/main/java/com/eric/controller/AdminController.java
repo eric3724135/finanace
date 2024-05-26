@@ -33,6 +33,8 @@ public class AdminController {
     private AnalysisService analysisService;
     @Autowired
     private WessiorFintechService wessiorFintechService;
+    @Autowired
+    private FVGService fvgService;
 
     @Autowired
     private MailConfig mailConfig;
@@ -139,7 +141,7 @@ public class AdminController {
 //        List<FVGResult> results = fvgStrategy.execute(symbol.getId(), quotes);
 //        Collections.reverse(results);
         //-----------------------FVG Strategy------------------
-        strategyService.scheduleFVGStrategy();
+        fvgService.scheduleFVGStrategy();
 
         //頁面必須回傳值
         this.setDefaultModel(model);

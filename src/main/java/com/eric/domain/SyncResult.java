@@ -17,6 +17,8 @@ public class SyncResult {
 
     private Date queryDate = new Date();
 
+    private Date endDate = new Date();
+
     private String msg;
 
     public SyncResult() {
