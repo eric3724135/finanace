@@ -1,6 +1,9 @@
 package com.eric.service;
 
 import com.eric.domain.*;
+import com.eric.excel.FVGStrategyExcelHandler;
+import com.eric.mail.MailConfig;
+import com.eric.mail.MailUtils;
 import com.eric.persist.pojo.FVGRecordDto;
 import com.eric.persist.pojo.FavoriteSymbolDto;
 import com.eric.persist.repo.FVGRecordRepository;
@@ -10,7 +13,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import javax.mail.MessagingException;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,12 +32,21 @@ public class FVGService {
     private QuoteService quoteService;
     @Autowired
     private FVGStrategy strategy;
+    @Autowired
+    private MailConfig mailConfig;
 
     @Autowired
     private FVGRecordRepository fvgRecordRepository;
 
+    private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyyMMdd");
+
+
     public List<FVGRecordDto> findRecordByRange(LocalDate startDate, LocalDate endDate) {
         return fvgRecordRepository.findRecordByRange(startDate, endDate);
+    }
+
+    public List<FVGRecordDto> findRecordByPositionAndRange(String position, LocalDate startDate, LocalDate endDate) {
+        return fvgRecordRepository.findRecordByPositionAndRange(position, startDate, endDate);
     }
 
     public FVGObject analysis(FVGRecordDto fvgRecord) {
@@ -70,8 +86,31 @@ public class FVGService {
         return object;
     }
 
-    @Scheduled(cron = "0 0 15 * * ?")
+    @Scheduled(cron = "0 0 14 * * ?")
     public void scheduleFVGStrategy() {
+        this.fetchFVGStrategy();
+        List<FVGRecordDto> list = this.findRecordByRange(LocalDate.now(), LocalDate.now());
+//        List<FVGObject> analysisList = new ArrayList<>();
+//        for (FVGRecordDto recordDto : list) {
+//            FVGObject object = this.analysis(recordDto);
+//            analysisList.add(object);
+//        }
+        FVGStrategyExcelHandler handler = new FVGStrategyExcelHandler();
+        try {
+            ByteArrayOutputStream bos = handler.export(list);
+            MailUtils.generateAndSendEmail(mailConfig, mailConfig.getAddressArr(),
+                    String.format("%s_FVG每日挑檔", LocalDate.now().format(dateFormatter)),
+                    String.format("%s_FVG每日挑檔", LocalDate.now().format(dateFormatter)),
+                    String.format("%s_FVG.xlsx", LocalDate.now().format(dateFormatter)), bos);
+        } catch (IOException | MessagingException e) {
+            log.error("[FVGStrategyExcelHandler] error ", e);
+        }
+
+
+    }
+
+
+    public void fetchFVGStrategy() {
         log.info("FVG 策略啟動");
 
         List<FavoriteSymbolDto> tweList = symbolService.getFavoriteSymbols(SymbolType.TWE);

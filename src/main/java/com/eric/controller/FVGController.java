@@ -1,6 +1,7 @@
 package com.eric.controller;
 
 import com.eric.domain.FVGObject;
+import com.eric.domain.FVGPosition;
 import com.eric.domain.SyncResult;
 import com.eric.persist.pojo.FVGRecordDto;
 import com.eric.service.FVGService;
@@ -48,7 +49,7 @@ public class FVGController {
         LocalDate startDate = LocalDate.parse(startDateStr, dateFormatter);
         LocalDate endDate = LocalDate.parse(endDateStr, dateFormatter);
 
-        List<FVGRecordDto> list = fvgService.findRecordByRange(startDate, endDate);
+        List<FVGRecordDto> list = fvgService.findRecordByPositionAndRange(FVGPosition.BUY.name(), startDate, endDate);
         List<FVGObject> analysisList = new ArrayList<>();
         for (FVGRecordDto recordDto : list) {
             FVGObject object = fvgService.analysis(recordDto);
