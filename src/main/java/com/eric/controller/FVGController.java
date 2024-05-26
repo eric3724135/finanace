@@ -1,5 +1,6 @@
 package com.eric.controller;
 
+import com.eric.domain.FVGObject;
 import com.eric.domain.SyncResult;
 import com.eric.persist.pojo.FVGRecordDto;
 import com.eric.service.FVGService;
@@ -48,8 +49,13 @@ public class FVGController {
         LocalDate endDate = LocalDate.parse(endDateStr, dateFormatter);
 
         List<FVGRecordDto> list = fvgService.findRecordByRange(startDate, endDate);
-        //TODO 應該計算現價差距漲幅
-        model.addAttribute("fvgs", list);
+        List<FVGObject> analysisList = new ArrayList<>();
+        for (FVGRecordDto recordDto : list) {
+            FVGObject object = fvgService.analysis(recordDto);
+            analysisList.add(object);
+        }
+
+        model.addAttribute("fvgs", analysisList);
         return "fvg";
     }
 

@@ -33,6 +33,43 @@ public class FVGService {
         return fvgRecordRepository.findRecordByRange(startDate, endDate);
     }
 
+    public FVGObject analysis(FVGRecordDto fvgRecord) {
+        FVGObject object = FVGObject.of(fvgRecord);
+        List<Quote> oriQuotes = quoteService.getusQuotesFromSite(new Symbol(object.getId(), object.getName()), "1d", "6mo");
+        List<Quote> quotes = new ArrayList<>();
+        for (Quote quote : oriQuotes) {
+            if (quote.getTradeDate().isAfter(object.getTradeDate())) {
+                quotes.add(quote);
+            }
+            if (quote.getTradeDate().isEqual(object.getTradeDate())) {
+                object.setHighestQuote(quote);
+                object.setLowestQuote(quote);
+                object.setLatestQuote(quote);
+            }
+        }
+        for (Quote quote : quotes) {
+            if (quote.getHigh() > object.getHighestQuote().getHigh()) {
+                object.setHighestQuote(quote);
+            }
+            if (quote.getLow() > object.getLowestQuote().getLow()) {
+                object.setLowestQuote(quote);
+            }
+            if (quote.getTradeDate().isAfter(object.getLatestQuote().getTradeDate())) {
+                object.setLatestQuote(quote);
+            }
+        }
+
+        object.setHighestProfit(object.getHighestQuote().getHigh() / object.getClose() - 1);
+        object.setLowestProfit(1 - object.getLowestQuote().getLow() / object.getClose());
+        if (object.getLowestProfit() < 0) {
+            object.setLowestProfit(0);
+        }
+        object.setLatestProfit(object.getLatestQuote().getClose() / object.getClose() - 1);
+
+
+        return object;
+    }
+
     @Scheduled(cron = "0 0 15 * * ?")
     public void scheduleFVGStrategy() {
         log.info("FVG 策略啟動");
@@ -42,8 +79,7 @@ public class FVGService {
 
         for (FavoriteSymbolDto favoriteSymbolDto : tweList) {
             Symbol symbol = Symbol.ofTW(favoriteSymbolDto.getId(), favoriteSymbolDto.getName());
-            List<Quote> quotes = new ArrayList<>();
-            quotes = quoteService.getusQuotesFromSite(symbol, "1d", "6mo");
+            List<Quote> quotes = quoteService.getusQuotesFromSite(symbol, "1d", "6mo");
             if (quotes == null || quotes.isEmpty()) {
                 symbol = Symbol.ofTWO(favoriteSymbolDto.getId(), favoriteSymbolDto.getName());
                 quotes = quoteService.getusQuotesFromSite(symbol, "1d", "6mo");
@@ -59,10 +95,10 @@ public class FVGService {
 
                 if (FVGPosition.BUY.equals(result.getPosition()) || FVGPosition.SELL.equals(result.getPosition())) {
                     //寫入紀錄
-                    List<FVGRecordDto> records = fvgRecordRepository.findByIdAndTradeDate(favoriteSymbolDto.getId(), result.getTradeDate());
+                    List<FVGRecordDto> records = fvgRecordRepository.findByIdAndTradeDate(symbol.getId(), result.getTradeDate());
                     if (records.isEmpty()) {
                         FVGRecordDto record = new FVGRecordDto();
-                        record.setId(favoriteSymbolDto.getId());
+                        record.setId(symbol.getId());
                         record.setName(favoriteSymbolDto.getName());
                         record.setTradeDate(result.getTradeDate());
                         record.setClose(result.getClose());
@@ -88,10 +124,10 @@ public class FVGService {
 
                 if (FVGPosition.BUY.equals(result.getPosition()) || FVGPosition.SELL.equals(result.getPosition())) {
                     //寫入紀錄
-                    List<FVGRecordDto> records = fvgRecordRepository.findByIdAndTradeDate(favoriteSymbolDto.getId(), result.getTradeDate());
+                    List<FVGRecordDto> records = fvgRecordRepository.findByIdAndTradeDate(symbol.getId(), result.getTradeDate());
                     if (records.isEmpty()) {
                         FVGRecordDto record = new FVGRecordDto();
-                        record.setId(favoriteSymbolDto.getId());
+                        record.setId(symbol.getId());
                         record.setName(favoriteSymbolDto.getName());
                         record.setTradeDate(result.getTradeDate());
                         record.setClose(result.getClose());

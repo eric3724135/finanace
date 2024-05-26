@@ -9,25 +9,31 @@
 <body>
 <div th:insert="~{nav :: nav}"></div>
 <h1>FVG Strategy 查詢</h1>
-<form action="#" th:action="@{/fvg/query}" method="get" th:object="${result}">
-    <input type="date" th:field="*{queryDate}"/>
-    <input type="date" th:field="*{endDate}"/>
-    <button type="submit">查詢</button>
-</form>
-<div >
-    <table >
-        <colgroup>
-            <col width="100px">
-            <col width="100px">
-            <col width="100px">
-            <col width="100px">
-        </colgroup>
+<div class="col">
+    <form action="#" th:action="@{/fvg/query}" method="get" th:object="${result}">
+        <input type="date" th:field="*{queryDate}"/>
+        <input type="date" th:field="*{endDate}"/>
+        <button type="submit">查詢</button>
+    </form>
+</div>
+<div class="col">
+</div>
+<div class="col-lg-10"></div>
+<div>
+    <table class="table table-dark">
         <thead>
         <tr>
-            <th> 日期</th>
-            <th> 代碼</th>
-            <th> 名稱</th>
-            <th> 建議</th>
+            <th scope="col"> 日期</th>
+            <th scope="col"> 代號</th>
+            <th scope="col"> 名稱</th>
+            <th scope="col"> 建議</th>
+            <th scope="col"> 近日收盤價</th>
+            <th scope="col"> 近日漲幅％</th>
+            <th scope="col"> 最大漲幅日期</th>
+            <th scope="col"> 最大漲幅％</th>
+            <th scope="col"> 最大跌幅日期</th>
+            <th scope="col"> 最大跌幅％</th>
+
         </tr>
         </thead>
         <tbody>
@@ -37,9 +43,18 @@
         <tr th:each="fvg : ${fvgs}">
 
             <td th:text="${#temporals.format(fvg.tradeDate, 'yyyy-MM-dd')}"></td>
-            <td th:text="${fvg.id}" align="center"></td>
-            <td th:text="${fvg.name}"  align="center"></td>
-            <td th:text="${fvg.position}"  align="center"></td>
+            <td th:text="${fvg.id}"></td>
+            <td th:text="${fvg.name}"></td>
+            <td th:text="${fvg.position}"></td>
+            <td th:text="${#numbers.formatDecimal(fvg.lowestQuote.close ,0,2)}"></td>
+            <td th:text="${#numbers.formatDecimal(fvg.latestProfit * 100,1,1)+'%'}"
+                th:style="${fvg.latestProfit gt 0} ? 'color:red;':'color:green;'"></td>
+            <td th:text="${#temporals.format(fvg.highestQuote.tradeDate, 'yyyy-MM-dd')}"></td>
+            <td th:text="${#numbers.formatDecimal(fvg.highestProfit * 100,1,1)+'%'}"
+                th:style="'color:red;'"></td>
+            <td th:text="${#temporals.format(fvg.lowestQuote.tradeDate, 'yyyy-MM-dd')}"></td>
+            <td th:text="${#numbers.formatDecimal(fvg.lowestProfit * 100,1,1)+'%'}"
+                th:style="'color:green;'"></td>
 
         </tr>
         </tbody>
