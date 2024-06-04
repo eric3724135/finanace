@@ -53,7 +53,7 @@ public class FVGStrategyExcelHandler {
 
 
         int num = 1;
-        for (FVGRecordDto fvgRecord : fvgRecords) {
+        for (FVGRecordDto fvgRecord : buyList) {
             row = buySheet.createRow(num++);
             row.createCell(0).setCellValue(fvgRecord.getTradeDate().format(dateFormatter));
             row.createCell(1).setCellValue(fvgRecord.getId());
@@ -79,7 +79,7 @@ public class FVGStrategyExcelHandler {
 
 
         num = 1;
-        for (FVGRecordDto fvgRecord : fvgRecords) {
+        for (FVGRecordDto fvgRecord : sellList) {
             row = sellSheet.createRow(num++);
             row.createCell(0).setCellValue(fvgRecord.getTradeDate().format(dateFormatter));
             row.createCell(1).setCellValue(fvgRecord.getId());

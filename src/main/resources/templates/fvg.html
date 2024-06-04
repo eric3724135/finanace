@@ -15,7 +15,11 @@
         <input type="date" th:field="*{endDate}"/>
         <button type="submit">查詢</button>
     </form>
+
 </div>
+<form action="#" th:action="@{/fvg/hold}" method="get" th:object="${result}">
+    <button type="submit">取得持有標的</button>
+</form>
 <div class="col">
 </div>
 <div class="col-lg-10"></div>

@@ -141,7 +141,7 @@ public class AdminController {
 //        List<FVGResult> results = fvgStrategy.execute(symbol.getId(), quotes);
 //        Collections.reverse(results);
         //-----------------------FVG Strategy------------------
-        fvgService.scheduleFVGStrategy();
+        fvgService.scheduleTweFVGStrategy();
 
         //頁面必須回傳值
         this.setDefaultModel(model);

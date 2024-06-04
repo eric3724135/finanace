@@ -2,6 +2,7 @@ package com.eric.controller;
 
 import com.eric.domain.FVGObject;
 import com.eric.domain.FVGPosition;
+import com.eric.domain.Symbol;
 import com.eric.domain.SyncResult;
 import com.eric.persist.pojo.FVGRecordDto;
 import com.eric.service.FVGService;
@@ -11,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.text.ParseException;
@@ -31,6 +33,20 @@ public class FVGController {
     @GetMapping("/fvg")
     public String init(Model model) {
         this.setDefaultModel(model);
+        return "fvg";
+    }
+
+    @GetMapping("/fvg/hold")
+    public String getFvgHoldList(Model model) {
+        this.setDefaultModel(model);
+        List<FVGRecordDto> list = fvgService.findRecordStillHold();
+        List<FVGObject> analysisList = new ArrayList<>();
+        for (FVGRecordDto recordDto : list) {
+            FVGObject object = fvgService.analysis(recordDto);
+            analysisList.add(object);
+        }
+
+        model.addAttribute("fvgs", analysisList);
         return "fvg";
     }
 
@@ -58,6 +74,32 @@ public class FVGController {
 
         model.addAttribute("fvgs", analysisList);
         return "fvg";
+    }
+
+    @PostMapping("/fvg/twe")
+    public String fetchTweFVGStrategy(Model model) {
+
+        fvgService.scheduleTweFVGStrategy();
+        this.setDefaultModel(model);
+        model.addAttribute("symbol", new Symbol());
+        SyncResult result = (SyncResult) model.getAttribute("result");
+        result.setMsg("Twe FVG Strategy 啟動");
+
+        return "admin";
+
+    }
+
+    @PostMapping("/fvg/us")
+    public String fetchUsFVGStrategy(Model model) {
+
+        fvgService.fetchUsFVGStrategy();
+        this.setDefaultModel(model);
+        model.addAttribute("symbol", new Symbol());
+        SyncResult result = (SyncResult) model.getAttribute("result");
+        result.setMsg("Us FVG Strategy 啟動");
+
+        return "admin";
+
     }
 
     private void setDefaultModel(Model model) {

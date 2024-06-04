@@ -20,6 +20,9 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 @Slf4j
 @Service
@@ -35,14 +38,29 @@ public class FVGService {
     @Autowired
     private MailConfig mailConfig;
 
+    private Future<?> tweFuture;
+    private Future<?> usFuture;
+
     @Autowired
     private FVGRecordRepository fvgRecordRepository;
 
     private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyyMMdd");
 
+    private final ExecutorService executorService = Executors.newFixedThreadPool(2);
 
-    public List<FVGRecordDto> findRecordByRange(LocalDate startDate, LocalDate endDate) {
-        return fvgRecordRepository.findRecordByRange(startDate, endDate);
+
+    public List<FVGRecordDto> findRecordByRangeAndType(LocalDate startDate, LocalDate endDate, SymbolType symbolType) {
+        List<FVGRecordDto> results = new ArrayList<>();
+        switch (symbolType) {
+            case TWE -> {
+                results = fvgRecordRepository.findTweRecordByRange(startDate, endDate);
+            }
+            case US -> {
+                results = fvgRecordRepository.findUsRecordByRange(startDate, endDate);
+            }
+
+        }
+        return results;
     }
 
     public List<FVGRecordDto> findRecordByPositionAndRange(String position, LocalDate startDate, LocalDate endDate) {
@@ -87,34 +105,67 @@ public class FVGService {
     }
 
     @Scheduled(cron = "0 0 14 * * ?")
-    public void scheduleFVGStrategy() {
-        this.fetchFVGStrategy();
-        List<FVGRecordDto> list = this.findRecordByRange(LocalDate.now(), LocalDate.now());
+    public void scheduleTweFVGStrategy() {
+        if (tweFuture != null && !tweFuture.isDone()) {
+            return;
+        }
+        tweFuture = executorService.submit(() -> {
+
+
+            this.fetchTweFVGStrategy();
+            List<FVGRecordDto> list = this.findRecordByRangeAndType(LocalDate.now(), LocalDate.now(), SymbolType.TWE);
+//            List<FVGObject> analysisList = new ArrayList<>();
+//            for (FVGRecordDto recordDto : list) {
+//                FVGObject object = this.analysis(recordDto);
+//                analysisList.add(object);
+//            }
+            FVGStrategyExcelHandler handler = new FVGStrategyExcelHandler();
+            try {
+                ByteArrayOutputStream bos = handler.export(list);
+                MailUtils.generateAndSendEmail(mailConfig, mailConfig.getAddressArr(),
+                        String.format("%s_台股FVG每日挑檔", LocalDate.now().format(dateFormatter)),
+                        String.format("%s_台股FVG每日挑檔", LocalDate.now().format(dateFormatter)),
+                        String.format("%s_台股FVG.xlsx", LocalDate.now().format(dateFormatter)), bos);
+            } catch (IOException | MessagingException e) {
+                log.error("[FVGStrategyExcelHandler] error ", e);
+            }
+        });
+
+
+    }
+
+    @Scheduled(cron = "0 0 7 * * ?")
+    public void scheduleUsFVGStrategy() {
+        if (usFuture != null && !usFuture.isDone()) {
+            return;
+        }
+        usFuture = executorService.submit(() -> {
+            this.fetchTweFVGStrategy();
+            List<FVGRecordDto> list = this.findRecordByRangeAndType(LocalDate.now(), LocalDate.now(), SymbolType.US);
 //        List<FVGObject> analysisList = new ArrayList<>();
 //        for (FVGRecordDto recordDto : list) {
 //            FVGObject object = this.analysis(recordDto);
 //            analysisList.add(object);
 //        }
-        FVGStrategyExcelHandler handler = new FVGStrategyExcelHandler();
-        try {
-            ByteArrayOutputStream bos = handler.export(list);
-            MailUtils.generateAndSendEmail(mailConfig, mailConfig.getAddressArr(),
-                    String.format("%s_FVG每日挑檔", LocalDate.now().format(dateFormatter)),
-                    String.format("%s_FVG每日挑檔", LocalDate.now().format(dateFormatter)),
-                    String.format("%s_FVG.xlsx", LocalDate.now().format(dateFormatter)), bos);
-        } catch (IOException | MessagingException e) {
-            log.error("[FVGStrategyExcelHandler] error ", e);
-        }
-
+            FVGStrategyExcelHandler handler = new FVGStrategyExcelHandler();
+            try {
+                ByteArrayOutputStream bos = handler.export(list);
+                MailUtils.generateAndSendEmail(mailConfig, mailConfig.getAddressArr(),
+                        String.format("%s_美股FVG每日挑檔", LocalDate.now().format(dateFormatter)),
+                        String.format("%s_美股FVG每日挑檔", LocalDate.now().format(dateFormatter)),
+                        String.format("%s_美股FVG.xlsx", LocalDate.now().format(dateFormatter)), bos);
+            } catch (IOException | MessagingException e) {
+                log.error("[FVGStrategyExcelHandler] error ", e);
+            }
+        });
 
     }
 
 
-    public void fetchFVGStrategy() {
-        log.info("FVG 策略啟動");
+    public void fetchTweFVGStrategy() {
+        log.info("TWE FVG 策略啟動");
 
         List<FavoriteSymbolDto> tweList = symbolService.getFavoriteSymbols(SymbolType.TWE);
-        List<FavoriteSymbolDto> usList = symbolService.getFavoriteSymbols(SymbolType.US);
 
 
         for (FavoriteSymbolDto favoriteSymbolDto : tweList) {
@@ -149,6 +200,14 @@ public class FVGService {
                 }
             }
         }
+
+    }
+
+    public void fetchUsFVGStrategy() {
+        log.info("US FVG 策略啟動");
+
+        List<FavoriteSymbolDto> usList = symbolService.getFavoriteSymbols(SymbolType.US);
+
         for (FavoriteSymbolDto favoriteSymbolDto : usList) {
             Symbol symbol = favoriteSymbolDto.getSymbolObj();
             List<Quote> quotes = quoteService.getusQuotesFromSite(symbol, "1d", "10y");
@@ -178,6 +237,10 @@ public class FVGService {
             }
         }
 
+    }
+
+    public List<FVGRecordDto> findRecordStillHold() {
+        return fvgRecordRepository.findStillHoldBuy();
     }
 
     private void saveFvgRecord(Symbol symbol, FavoriteSymbolDto favoriteSymbolDto, FVGResult result) {
