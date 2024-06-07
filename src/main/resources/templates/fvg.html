@@ -50,7 +50,7 @@
             <td th:text="${fvg.id}"></td>
             <td th:text="${fvg.name}"></td>
             <td th:text="${fvg.position}"></td>
-            <td th:text="${#numbers.formatDecimal(fvg.lowestQuote.close ,0,2)}"></td>
+            <td th:text="${#numbers.formatDecimal(fvg.latestQuote.close ,0,2)}"></td>
             <td th:text="${#numbers.formatDecimal(fvg.latestProfit * 100,1,1)+'%'}"
                 th:style="${fvg.latestProfit gt 0} ? 'color:red;':'color:green;'"></td>
             <td th:text="${#temporals.format(fvg.highestQuote.tradeDate, 'yyyy-MM-dd')}"></td>
