@@ -134,7 +134,7 @@ public class FVGService {
 
     }
 
-    @Scheduled(cron = "0 0 7 * * ?")
+    @Scheduled(cron = "0 0 8 * * ?")
     public void scheduleUsFVGStrategy() {
         if (usFuture != null && !usFuture.isDone()) {
             return;

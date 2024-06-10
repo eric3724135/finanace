@@ -6,6 +6,7 @@ import com.eric.histock.HiStockDataHandler;
 import com.eric.mail.MailConfig;
 import com.eric.mail.MailUtils;
 import com.eric.parser.ParserResult;
+import com.eric.persist.pojo.FavoriteSymbolDto;
 import com.eric.persist.pojo.QuoteDto;
 import com.eric.persist.pojo.SymbolDto;
 import com.eric.persist.repo.QuoteRepository;
@@ -136,7 +137,8 @@ public class QuoteService {
     public void scheduleTweDailyQuote() {
         log.info("台股同步批次啟動");
 
-        List<SymbolDto> tweSymbols = symbolService.getSymbolsFromLocal(SymbolType.TWE);
+        List<FavoriteSymbolDto> tweSymbols = symbolService.getFavoriteSymbols(SymbolType.TWE);
+//        List<SymbolDto> tweSymbols = symbolService.getSymbolsFromLocal(SymbolType.TWE);
         SymbolCounter.tweSymbolSize = tweSymbols.size();
         SymbolCounter.tweSymbolCnt = 0;
         if (tweFuture != null && !tweFuture.isDone()) {
@@ -226,7 +228,7 @@ public class QuoteService {
     @Scheduled(cron = "0 0 7 * * ?")
     public void scheduleUSDailyQuote() {
         log.info("美股同步批次啟動");
-        List<SymbolDto> usSymbols = symbolService.getSymbolsFromLocal(SymbolType.US);
+        List<FavoriteSymbolDto> usSymbols = symbolService.getFavoriteSymbols(SymbolType.TWE);
         usSymbolSize = usSymbols.size();
         usSymbolCnt = 0;
         if (usFuture != null && !usFuture.isDone()) {
