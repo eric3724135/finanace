@@ -6,7 +6,9 @@ import com.eric.mail.MailConfig;
 import com.eric.mail.MailUtils;
 import com.eric.persist.pojo.FVGRecordDto;
 import com.eric.persist.pojo.FavoriteSymbolDto;
+import com.eric.persist.pojo.ProfitDto;
 import com.eric.persist.repo.FVGRecordRepository;
+import com.eric.persist.repo.ProfitRepository;
 import com.eric.strategy.FVGStrategy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,6 +45,8 @@ public class FVGService {
 
     @Autowired
     private FVGRecordRepository fvgRecordRepository;
+    @Autowired
+    private ProfitRepository profitRepository;
 
     private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyyMMdd");
 
@@ -70,6 +74,7 @@ public class FVGService {
     public FVGObject analysis(FVGRecordDto fvgRecord) {
         FVGObject object = FVGObject.of(fvgRecord);
         List<Quote> oriQuotes = quoteService.getusQuotesFromSite(new Symbol(object.getId(), object.getName()), "1d", "6mo");
+
         List<Quote> quotes = new ArrayList<>();
         for (Quote quote : oriQuotes) {
             if (quote.getTradeDate().isAfter(object.getTradeDate())) {
@@ -85,7 +90,7 @@ public class FVGService {
             if (quote.getHigh() > object.getHighestQuote().getHigh()) {
                 object.setHighestQuote(quote);
             }
-            if (quote.getLow() > object.getLowestQuote().getLow()) {
+            if (quote.getLow() < object.getLowestQuote().getLow()) {
                 object.setLowestQuote(quote);
             }
             if (quote.getTradeDate().isAfter(object.getLatestQuote().getTradeDate())) {
@@ -140,7 +145,7 @@ public class FVGService {
             return;
         }
         usFuture = executorService.submit(() -> {
-            this.fetchTweFVGStrategy();
+            this.fetchUsFVGStrategy();
             List<FVGRecordDto> list = this.findRecordByRangeAndType(LocalDate.now(), LocalDate.now(), SymbolType.US);
 //        List<FVGObject> analysisList = new ArrayList<>();
 //        for (FVGRecordDto recordDto : list) {
@@ -179,24 +184,52 @@ public class FVGService {
                 continue;
             }
             List<FVGResult> results = strategy.execute(symbol.getId(), quotes);
-
+            List<FVGResult> buySellList = new ArrayList<>();
 //            FVGResult result = results.get(results.size() - 1);
-            for (int i = results.size() - 10; i < results.size(); i++) {
+            for (int i = 0; i < results.size(); i++) {
                 FVGResult result = results.get(i);
-
+                //後續計算prodit用
                 if (FVGPosition.BUY.equals(result.getPosition()) || FVGPosition.SELL.equals(result.getPosition())) {
+                    buySellList.add(result);
+                }
+                if (i >= results.size() - 10) {
+                    if (FVGPosition.BUY.equals(result.getPosition()) || FVGPosition.SELL.equals(result.getPosition())) {
 
-                    List<FVGRecordDto> records = fvgRecordRepository.findByIdAndTradeDate(symbol.getId(), result.getTradeDate());
-                    if (!records.isEmpty()) {
-                        if (result.getTradeDate().isEqual(LocalDate.now())) {
-                            fvgRecordRepository.delete(records.get(0));
+                        List<FVGRecordDto> records = fvgRecordRepository.findByIdAndTradeDate(symbol.getId(), result.getTradeDate());
+                        if (!records.isEmpty()) {
+                            if (result.getTradeDate().isEqual(LocalDate.now())) {
+                                fvgRecordRepository.delete(records.get(0));
+                                this.saveFvgRecord(symbol, favoriteSymbolDto, result);
+                            }
+                        }
+                        //寫入紀錄
+                        if (records.isEmpty()) {
                             this.saveFvgRecord(symbol, favoriteSymbolDto, result);
                         }
                     }
-                    //寫入紀錄
-                    if (records.isEmpty()) {
-                        this.saveFvgRecord(symbol, favoriteSymbolDto, result);
+                }
+            }
+
+            ProfitDto profit = null;
+            for (FVGResult result : buySellList) {
+                if (FVGPosition.BUY.equals(result.getPosition())) {
+                    profit = new ProfitDto(favoriteSymbolDto.getId(), favoriteSymbolDto.getName(), "FVG_TWE", LocalDate.now());
+                    profit.setBuyDate(result.getTradeDate());
+                    profit.setBuyPrice(result.getClose());
+                }
+                if (FVGPosition.SELL.equals(result.getPosition())) {
+                    assert profit != null;
+                    profit.setSellDate(result.getTradeDate());
+                    profit.setSellPrice(result.getClose());
+                    profit.setProfit(profit.getSellPrice() / profit.getBuyPrice() - 1);
+                    if (profit.getBuyDate().isAfter(LocalDate.of(2022, 1, 1))) {
+                        ProfitDto exists = profitRepository.findBySymbolAndBuyDate(profit.getId(), profit.getStrategy(), profit.getBuyDate());
+                        if (exists == null) {
+                            profitRepository.save(profit);
+                        }
                     }
+                    profit = null;
+
                 }
             }
         }
@@ -215,24 +248,52 @@ public class FVGService {
                 continue;
             }
             List<FVGResult> results = strategy.execute(symbol.getId(), quotes);
-
+            List<FVGResult> buySellList = new ArrayList<>();
 //            FVGResult result = results.get(results.size() - 1);
-            for (int i = results.size() - 10; i < results.size(); i++) {
+            for (int i = 0; i < results.size(); i++) {
                 FVGResult result = results.get(i);
-
+                //後續計算prodit用
                 if (FVGPosition.BUY.equals(result.getPosition()) || FVGPosition.SELL.equals(result.getPosition())) {
+                    buySellList.add(result);
+                }
+                if (i >= results.size() - 10) {
 
-                    List<FVGRecordDto> records = fvgRecordRepository.findByIdAndTradeDate(symbol.getId(), result.getTradeDate());
-                    if (!records.isEmpty()) {
-                        if (result.getTradeDate().isEqual(LocalDate.now())) {
-                            fvgRecordRepository.delete(records.get(0));
+                    if (FVGPosition.BUY.equals(result.getPosition()) || FVGPosition.SELL.equals(result.getPosition())) {
+
+                        List<FVGRecordDto> records = fvgRecordRepository.findByIdAndTradeDate(symbol.getId(), result.getTradeDate());
+                        if (!records.isEmpty()) {
+                            if (result.getTradeDate().isEqual(LocalDate.now())) {
+                                fvgRecordRepository.delete(records.get(0));
+                                this.saveFvgRecord(symbol, favoriteSymbolDto, result);
+                            }
+                        }
+                        //寫入紀錄
+                        if (records.isEmpty()) {
                             this.saveFvgRecord(symbol, favoriteSymbolDto, result);
                         }
                     }
-                    //寫入紀錄
-                    if (records.isEmpty()) {
-                        this.saveFvgRecord(symbol, favoriteSymbolDto, result);
+                }
+            }
+            ProfitDto profit = null;
+            for (FVGResult result : buySellList) {
+                if (FVGPosition.BUY.equals(result.getPosition())) {
+                    profit = new ProfitDto(favoriteSymbolDto.getId(), favoriteSymbolDto.getName(), "FVG_US", LocalDate.now());
+                    profit.setBuyDate(result.getTradeDate());
+                    profit.setBuyPrice(result.getClose());
+                }
+                if (FVGPosition.SELL.equals(result.getPosition())) {
+                    assert profit != null;
+                    profit.setSellDate(result.getTradeDate());
+                    profit.setSellPrice(result.getClose());
+                    profit.setProfit(profit.getSellPrice() / profit.getBuyPrice() - 1);
+                    if (profit.getBuyDate().isAfter(LocalDate.of(2022, 1, 1))) {
+                        ProfitDto exists = profitRepository.findBySymbolAndBuyDate(profit.getId(), profit.getStrategy(), profit.getBuyDate());
+                        if (exists == null) {
+                            profitRepository.save(profit);
+                        }
                     }
+                    profit = null;
+
                 }
             }
         }
