@@ -37,13 +37,22 @@ public class FVGController {
     }
 
     @GetMapping("/fvg/hold")
-    public String getFvgHoldList(Model model) {
+    public String getFvgHoldList(Model model, @RequestParam(required = false, name = "type") String type) {
         this.setDefaultModel(model);
-        List<FVGRecordDto> list = fvgService.findRecordStillHold();
+        List<FVGRecordDto> list = new ArrayList<>();
+        if ("twe".equals(type)) {
+            list = fvgService.findTweRecordStillHold();
+        } else if ("us".equals(type)) {
+            list = fvgService.findUsRecordStillHold();
+        }
         List<FVGObject> analysisList = new ArrayList<>();
         for (FVGRecordDto recordDto : list) {
-            FVGObject object = fvgService.analysis(recordDto);
-            analysisList.add(object);
+            try {
+                FVGObject object = fvgService.analysis(recordDto);
+                analysisList.add(object);
+            } catch (Exception e) {
+                log.error("[{}] error", recordDto.getId(), e);
+            }
         }
 
         model.addAttribute("fvgs", analysisList);

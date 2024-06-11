@@ -112,7 +112,7 @@ public class FVGService {
         object.setLatestProfit(object.getLatestQuote().getClose() / object.getClose() - 1);
 
         //get ma 排序狀況
-        this.fetchMaSorting(object,oriQuotes);
+        this.fetchMaSorting(object, oriQuotes);
         return object;
     }
 
@@ -307,8 +307,11 @@ public class FVGService {
 
     }
 
-    public List<FVGRecordDto> findRecordStillHold() {
-        return fvgRecordRepository.findStillHoldBuy();
+    public List<FVGRecordDto> findTweRecordStillHold() {
+        return fvgRecordRepository.findTweStillHoldBuy();
+    }
+    public List<FVGRecordDto> findUsRecordStillHold() {
+        return fvgRecordRepository.findUsStillHoldBuy();
     }
 
     public FVGObject fetchMaSorting(FVGObject object, List<Quote> quotes) {

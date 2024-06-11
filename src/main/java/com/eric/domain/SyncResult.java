@@ -19,6 +19,8 @@ public class SyncResult {
 
     private Date endDate = new Date();
 
+    private String type = "twe";
+
     private String msg;
 
     public SyncResult() {

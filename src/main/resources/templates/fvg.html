@@ -18,7 +18,10 @@
 
 </div>
 <form action="#" th:action="@{/fvg/hold}" method="get" th:object="${result}">
+
     <button type="submit">取得持有標的</button>
+    <label><input type="radio" name="TWE" value="twe" th:field="*{type}"/>台股</label>
+    <label><input type="radio" name="US" value="us" th:field="*{type}"/>美股</label>
 </form>
 <div class="col">
 </div>
@@ -63,7 +66,7 @@
                 th:style="${#strings.contains(fvg.maSorting,'ma5>ma10>ma20')} ? 'color:red;':
                 (${#strings.contains(fvg.maSorting,'ma5>ma10')} ? 'color:green;':'')"></td>
 
-<!--            ${#strings.contains(fvg.maSorting,'ma5>ma20')} ? 'color:green;':-->
+            <!--            ${#strings.contains(fvg.maSorting,'ma5>ma20')} ? 'color:green;':-->
         </tr>
         </tbody>
     </table>

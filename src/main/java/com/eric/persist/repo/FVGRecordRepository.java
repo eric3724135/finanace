@@ -24,5 +24,8 @@ public interface FVGRecordRepository extends JpaRepository<FVGRecordDto, String>
     List<FVGRecordDto> findUsRecordByRange(LocalDate startDate, LocalDate endDate);
 
     @Query(value = "SELECT a.* FROM FVG_RECORD a INNER JOIN ( SELECT id, MAX(trade_date) trade_date   FROM FVG_RECORD GROUP BY ID) b ON a.id= b.id AND a.trade_date = b.trade_date WHERE a.position ='BUY' and a.id < '9999' order by trade_date desc", nativeQuery = true)
-    List<FVGRecordDto> findStillHoldBuy();
+    List<FVGRecordDto> findTweStillHoldBuy();
+
+    @Query(value = "SELECT a.* FROM FVG_RECORD a INNER JOIN ( SELECT id, MAX(trade_date) trade_date   FROM FVG_RECORD GROUP BY ID) b ON a.id= b.id AND a.trade_date = b.trade_date WHERE a.position ='BUY' and a.id > '999999' order by trade_date desc", nativeQuery = true)
+    List<FVGRecordDto> findUsStillHoldBuy();
 }
