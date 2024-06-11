@@ -1,6 +1,7 @@
 package com.eric.controller;
 
 import com.eric.domain.Quote;
+import com.eric.domain.Symbol;
 import com.eric.domain.SymbolCounter;
 import com.eric.domain.SyncResult;
 import com.eric.excel.USStockExcelReportHandler;
@@ -73,7 +74,7 @@ public class TweQuoteController {
         SyncResult result = new SyncResult();
         result.setMsg("啟動台股手動更新");
         model.addAttribute("result", result);
-
+        model.addAttribute("symbol", new Symbol());
         return "admin";
 
     }

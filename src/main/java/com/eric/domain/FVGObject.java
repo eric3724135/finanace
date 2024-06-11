@@ -18,6 +18,7 @@ public class FVGObject extends FVGRecordDto {
 
     private double lowestProfit;
 
+    private String maSorting;
 
 
 

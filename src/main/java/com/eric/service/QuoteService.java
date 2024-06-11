@@ -228,7 +228,7 @@ public class QuoteService {
     @Scheduled(cron = "0 0 7 * * ?")
     public void scheduleUSDailyQuote() {
         log.info("美股同步批次啟動");
-        List<FavoriteSymbolDto> usSymbols = symbolService.getFavoriteSymbols(SymbolType.TWE);
+        List<FavoriteSymbolDto> usSymbols = symbolService.getFavoriteSymbols(SymbolType.US);
         usSymbolSize = usSymbols.size();
         usSymbolCnt = 0;
         if (usFuture != null && !usFuture.isDone()) {

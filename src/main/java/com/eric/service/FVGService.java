@@ -14,6 +14,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.ta4j.core.BarSeries;
+import org.ta4j.core.indicators.SMAIndicator;
 
 import javax.mail.MessagingException;
 import java.io.ByteArrayOutputStream;
@@ -21,7 +23,9 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.TreeMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -35,6 +39,8 @@ public class FVGService {
     private SymbolService symbolService;
     @Autowired
     private QuoteService quoteService;
+    @Autowired
+    private Ta4jIndicatorService ta4jIndicatorService;
     @Autowired
     private FVGStrategy strategy;
     @Autowired
@@ -105,7 +111,8 @@ public class FVGService {
         }
         object.setLatestProfit(object.getLatestQuote().getClose() / object.getClose() - 1);
 
-
+        //get ma 排序狀況
+        this.fetchMaSorting(object,oriQuotes);
         return object;
     }
 
@@ -127,7 +134,7 @@ public class FVGService {
             FVGStrategyExcelHandler handler = new FVGStrategyExcelHandler();
             try {
                 ByteArrayOutputStream bos = handler.export(list);
-                MailUtils.generateAndSendEmail(mailConfig, mailConfig.getAddressArr(),
+                MailUtils.generateAndSendEmail(mailConfig, new String[]{"eric3724135@gmail.com"},
                         String.format("%s_台股FVG每日挑檔", LocalDate.now().format(dateFormatter)),
                         String.format("%s_台股FVG每日挑檔", LocalDate.now().format(dateFormatter)),
                         String.format("%s_台股FVG.xlsx", LocalDate.now().format(dateFormatter)), bos);
@@ -155,7 +162,7 @@ public class FVGService {
             FVGStrategyExcelHandler handler = new FVGStrategyExcelHandler();
             try {
                 ByteArrayOutputStream bos = handler.export(list);
-                MailUtils.generateAndSendEmail(mailConfig, mailConfig.getAddressArr(),
+                MailUtils.generateAndSendEmail(mailConfig, new String[]{"eric3724135@gmail.com"},
                         String.format("%s_美股FVG每日挑檔", LocalDate.now().format(dateFormatter)),
                         String.format("%s_美股FVG每日挑檔", LocalDate.now().format(dateFormatter)),
                         String.format("%s_美股FVG.xlsx", LocalDate.now().format(dateFormatter)), bos);
@@ -302,6 +309,26 @@ public class FVGService {
 
     public List<FVGRecordDto> findRecordStillHold() {
         return fvgRecordRepository.findStillHoldBuy();
+    }
+
+    public FVGObject fetchMaSorting(FVGObject object, List<Quote> quotes) {
+        SMAIndicator sma5Indicator = ta4jIndicatorService.getSMAIndicator(object.getId(), quotes, 5);
+        SMAIndicator sma10Indicator = ta4jIndicatorService.getSMAIndicator(object.getId(), quotes, 10);
+        SMAIndicator sma20Indicator = ta4jIndicatorService.getSMAIndicator(object.getId(), quotes, 20);
+        SMAIndicator sma60Indicator = ta4jIndicatorService.getSMAIndicator(object.getId(), quotes, 60);
+        double ma5 = sma5Indicator.getValue(sma5Indicator.getBarSeries().getEndIndex()).doubleValue();
+        double ma10 = sma10Indicator.getValue(sma5Indicator.getBarSeries().getEndIndex()).doubleValue();
+        double ma20 = sma20Indicator.getValue(sma5Indicator.getBarSeries().getEndIndex()).doubleValue();
+        double ma60 = sma60Indicator.getValue(sma5Indicator.getBarSeries().getEndIndex()).doubleValue();
+        TreeMap<Double, String> map = new TreeMap<>(Collections.reverseOrder());
+        map.put(ma5, "ma5");
+        map.put(ma10, "ma10");
+        map.put(ma20, "ma20");
+        map.put(ma60, "ma60");
+        StringBuilder builder = new StringBuilder();
+        map.forEach((value, str) -> builder.append(str + ">"));
+        object.setMaSorting(builder.toString());
+        return object;
     }
 
     private void saveFvgRecord(Symbol symbol, FavoriteSymbolDto favoriteSymbolDto, FVGResult result) {

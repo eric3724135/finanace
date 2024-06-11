@@ -27,7 +27,16 @@ public class Ta4jIndicatorService {
         return barSeries;
     }
 
+    /**
+     * sma5Indicator.getValue(sma5Indicator.getBarSeries().getEndIndex()).doubleValue();
+     *
+     * @param symbol symbol 
+     * @param quotes quotes
+     * @param count N
+     * @return ma(N)
+     */
     public SMAIndicator getSMAIndicator(String symbol, List<Quote> quotes, int count) {
+        //double ma5 = sma5Indicator.getValue(sma5Indicator.getBarSeries().getEndIndex()).doubleValue();
         return new SMAIndicator(new ClosePriceIndicator(transfer(symbol, quotes)), count);
     }
 
