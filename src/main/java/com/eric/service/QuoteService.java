@@ -112,7 +112,11 @@ public class QuoteService {
         YahooUSQuoteParser yahooUSQuoteParser = new YahooUSQuoteParser(new UsSymbol(symbol.getId(), symbol.getName()), range, interval);
         ParserResult<USQuote> usQuoteResult = yahooUSQuoteParser.getResult();
         List<Quote> usResult = new ArrayList<>();
-        usQuoteResult.getResultList().forEach(usQuote -> usResult.add(this.convertUSQuote(usQuote)));
+        usQuoteResult.getResultList().forEach(usQuote -> {
+            if (usQuote.getClose() > 0) {
+                usResult.add(this.convertUSQuote(usQuote));
+            }
+        });
         usResult.sort((o1, o2) -> o2.getTradeDate().compareTo(o1.getTradeDate()));
         //發現week quote 可能出現trade date 重複(時間不同)
         if (usResult.size() > 2 &&
