@@ -199,7 +199,7 @@ public class FVGService {
                 if (FVGPosition.BUY.equals(result.getPosition()) || FVGPosition.SELL.equals(result.getPosition())) {
                     buySellList.add(result);
                 }
-                if (i >= results.size() - 10) {
+                if (i >= results.size() - 100) {
                     if (FVGPosition.BUY.equals(result.getPosition()) || FVGPosition.SELL.equals(result.getPosition())) {
 
                         List<FVGRecordDto> records = fvgRecordRepository.findByIdAndTradeDate(symbol.getId(), result.getTradeDate());
@@ -263,7 +263,7 @@ public class FVGService {
                 if (FVGPosition.BUY.equals(result.getPosition()) || FVGPosition.SELL.equals(result.getPosition())) {
                     buySellList.add(result);
                 }
-                if (i >= results.size() - 10) {
+                if (i >= results.size() - 100) {
 
                     if (FVGPosition.BUY.equals(result.getPosition()) || FVGPosition.SELL.equals(result.getPosition())) {
 
@@ -332,6 +332,10 @@ public class FVGService {
         map.forEach((value, str) -> builder.append(str + ">"));
         object.setMaSorting(builder.toString());
         return object;
+    }
+
+    public void getProfitReport(){
+
     }
 
     private void saveFvgRecord(Symbol symbol, FavoriteSymbolDto favoriteSymbolDto, FVGResult result) {

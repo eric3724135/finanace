@@ -24,6 +24,8 @@ public class FavoriteSymbolDto {
     @Column(name = "type")
     String type;
 
+    @Column(name = "category")
+    String category;
     public FavoriteSymbolDto() {
     }
 
