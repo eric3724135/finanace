@@ -9,6 +9,7 @@ import com.eric.parser.ParserResult;
 import com.eric.persist.pojo.FavoriteSymbolDto;
 import com.eric.persist.pojo.QuoteDto;
 import com.eric.persist.pojo.SymbolDto;
+import com.eric.persist.repo.FavoriteSymbolRepository;
 import com.eric.persist.repo.QuoteRepository;
 import com.eric.wessiorfinance.util.TLPosition;
 import com.eric.yahoo.YahooUSQuoteParser;
@@ -37,6 +38,8 @@ public class QuoteService {
 
     @Autowired
     private QuoteRepository quoteRepository;
+    @Autowired
+    private FavoriteSymbolRepository favoriteSymbolRepository;
 
     @Autowired
     private SymbolService symbolService;
@@ -77,7 +80,15 @@ public class QuoteService {
     public List<Quote> getLatestRSIQuotes(LocalDate date, String source) {
         List<QuoteDto> quotes = quoteRepository.findLatestByDate(date, source);
         List<Quote> results = new ArrayList<>();
-        quotes.forEach(quoteDto -> results.add(quoteDto.getQuoteObj()));
+        quotes.forEach(quoteDto -> {
+            Quote quote = quoteDto.getQuoteObj();
+            Optional<FavoriteSymbolDto> optionalSymbol = favoriteSymbolRepository.findById(quoteDto.getSymbol());
+            if (optionalSymbol.isPresent()) {
+                FavoriteSymbolDto symbolDto = optionalSymbol.get();
+                quote.setCategory(symbolDto.getCategory());
+            }
+            results.add(quote);
+        });
         results.sort(Comparator.comparingDouble(Quote::getRsi5));
         return results;
     }

@@ -20,6 +20,8 @@ public class FVGObject extends FVGRecordDto {
 
     private String maSorting;
 
+    private String category;
+
 
 
     public static FVGObject of(FVGRecordDto recordDto) {

@@ -33,7 +33,7 @@
             <th scope="col"> 日期</th>
             <th scope="col"> 代號</th>
             <th scope="col"> 名稱</th>
-            <th scope="col"> 建議</th>
+            <th scope="col"> 產業</th>
             <th scope="col"> 近日收盤價</th>
             <th scope="col"> 近日漲幅％</th>
             <th scope="col"> 最大漲幅日期</th>
@@ -52,7 +52,7 @@
             <td th:text="${#temporals.format(fvg.tradeDate, 'yyyy-MM-dd')}"></td>
             <td th:text="${fvg.id}"></td>
             <td th:text="${fvg.name}"></td>
-            <td th:text="${fvg.position}"></td>
+            <td th:text="${fvg.category}"></td>
             <td th:text="${#numbers.formatDecimal(fvg.latestQuote.close ,0,2)}"></td>
             <td th:text="${#numbers.formatDecimal(fvg.latestProfit * 100,1,1)+'%'}"
                 th:style="${fvg.latestProfit gt 0} ? 'color:red;':'color:green;'"></td>

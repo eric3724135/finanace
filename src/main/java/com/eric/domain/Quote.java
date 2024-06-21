@@ -33,6 +33,10 @@ public class Quote {
      */
     private String name;
     /**
+     * 產業
+     */
+    private String category;
+    /**
      * tradeDate
      */
     private LocalDate tradeDate;

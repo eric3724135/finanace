@@ -8,6 +8,7 @@ import com.eric.persist.pojo.FVGRecordDto;
 import com.eric.persist.pojo.FavoriteSymbolDto;
 import com.eric.persist.pojo.ProfitDto;
 import com.eric.persist.repo.FVGRecordRepository;
+import com.eric.persist.repo.FavoriteSymbolRepository;
 import com.eric.persist.repo.ProfitRepository;
 import com.eric.strategy.FVGStrategy;
 import lombok.extern.slf4j.Slf4j;
@@ -22,10 +23,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -39,6 +37,8 @@ public class FVGService {
     private SymbolService symbolService;
     @Autowired
     private QuoteService quoteService;
+    @Autowired
+    private FavoriteSymbolRepository favoriteSymbolRepository;
     @Autowired
     private Ta4jIndicatorService ta4jIndicatorService;
     @Autowired
@@ -79,6 +79,11 @@ public class FVGService {
 
     public FVGObject analysis(FVGRecordDto fvgRecord) {
         FVGObject object = FVGObject.of(fvgRecord);
+        Optional<FavoriteSymbolDto> optionalSymbol = favoriteSymbolRepository.findById(object.getId());
+        if (optionalSymbol.isPresent()) {
+            FavoriteSymbolDto symbolDto = optionalSymbol.get();
+            object.setCategory(symbolDto.getCategory());
+        }
         List<Quote> oriQuotes = quoteService.getusQuotesFromSite(new Symbol(object.getId(), object.getName()), "1d", "6mo");
 
         List<Quote> quotes = new ArrayList<>();
@@ -310,6 +315,7 @@ public class FVGService {
     public List<FVGRecordDto> findTweRecordStillHold() {
         return fvgRecordRepository.findTweStillHoldBuy();
     }
+
     public List<FVGRecordDto> findUsRecordStillHold() {
         return fvgRecordRepository.findUsStillHoldBuy();
     }
@@ -334,7 +340,7 @@ public class FVGService {
         return object;
     }
 
-    public void getProfitReport(){
+    public void getProfitReport() {
 
     }
 
