@@ -1,6 +1,7 @@
 package com.eric.controller;
 
 import com.eric.domain.*;
+import com.eric.indicator.BayesianTrendIndicator;
 import com.eric.mail.MailConfig;
 import com.eric.persist.pojo.FavoriteSymbolDto;
 import com.eric.service.*;
@@ -12,6 +13,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.ta4j.core.BarSeries;
+import org.ta4j.core.num.Num;
 
 import java.util.Collections;
 import java.util.List;
@@ -25,6 +28,8 @@ public class AdminController {
     private AdminService adminService;
     @Autowired
     private SymbolService symbolService;
+    @Autowired
+    private Ta4jIndicatorService ta4jIndicatorService;
     @Autowired
     private QuoteService quoteService;
     @Autowired
@@ -141,7 +146,16 @@ public class AdminController {
 //        List<FVGResult> results = fvgStrategy.execute(symbol.getId(), quotes);
 //        Collections.reverse(results);
         //-----------------------FVG Strategy------------------
-        fvgService.scheduleTweFVGStrategy();
+//        fvgService.scheduleTweFVGStrategy();
+
+        //-------------------
+        Symbol symbol = new Symbol("6477.tw", "tsmc");
+        List<Quote> quotes = quoteService.getusQuotesFromSite(symbol, "1d", "10y");
+        BarSeries series = ta4jIndicatorService.transfer(symbol.getId(),quotes); // Load your BarSeries data here
+        BayesianTrendIndicator indicator = new BayesianTrendIndicator(series, 60, 20, 10);
+
+        Num trend = indicator.calculateTrend();
+        System.out.println("Trend probability: " + trend);
 
         //頁面必須回傳值
         this.setDefaultModel(model);

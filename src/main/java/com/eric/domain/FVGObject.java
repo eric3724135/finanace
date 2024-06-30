@@ -22,6 +22,8 @@ public class FVGObject extends FVGRecordDto {
 
     private String category;
 
+    private double bayesianTrend;
+
 
 
     public static FVGObject of(FVGRecordDto recordDto) {

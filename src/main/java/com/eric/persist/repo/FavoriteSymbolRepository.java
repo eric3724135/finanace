@@ -12,4 +12,6 @@ public interface FavoriteSymbolRepository extends JpaRepository<FavoriteSymbolDt
     @Query(value = "SELECT * from favorite_symbol  where type = ?1", nativeQuery = true)
     List<FavoriteSymbolDto> findByType(String type);
 
+    @Query(value = "SELECT * from favorite_symbol  where id = ?1", nativeQuery = true)
+    FavoriteSymbolDto findBySymbol(String id);
 }

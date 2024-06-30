@@ -224,6 +224,13 @@ public class QuoteService {
             });
             if (!excelQuotes.isEmpty()) {
                 excelQuotes.sort(Comparator.comparing(Quote::getRsi5));
+                for(Quote quote: excelQuotes){
+                    Optional<FavoriteSymbolDto> optionalSymbol = favoriteSymbolRepository.findById(quote.getSymbol());
+                    if (optionalSymbol.isPresent()) {
+                        FavoriteSymbolDto symbolDto = optionalSymbol.get();
+                        quote.setCategory(symbolDto.getCategory());
+                    }
+                }
                 USStockExcelReportHandler handler = new USStockExcelReportHandler();
                 try {
                     ByteArrayOutputStream bos = handler.export(excelQuotes);
@@ -307,6 +314,13 @@ public class QuoteService {
             });
             if (!excelQuotes.isEmpty()) {
                 excelQuotes.sort(Comparator.comparing(Quote::getRsi5));
+                for(Quote quote: excelQuotes){
+                    Optional<FavoriteSymbolDto> optionalSymbol = favoriteSymbolRepository.findById(quote.getSymbol());
+                    if (optionalSymbol.isPresent()) {
+                        FavoriteSymbolDto symbolDto = optionalSymbol.get();
+                        quote.setCategory(symbolDto.getCategory());
+                    }
+                }
                 USStockExcelReportHandler handler = new USStockExcelReportHandler();
                 try {
                     ByteArrayOutputStream bos = handler.export(excelQuotes);

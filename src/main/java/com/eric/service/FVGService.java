@@ -2,6 +2,7 @@ package com.eric.service;
 
 import com.eric.domain.*;
 import com.eric.excel.FVGStrategyExcelHandler;
+import com.eric.indicator.BayesianTrendIndicator;
 import com.eric.mail.MailConfig;
 import com.eric.mail.MailUtils;
 import com.eric.persist.pojo.FVGRecordDto;
@@ -17,6 +18,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.ta4j.core.BarSeries;
 import org.ta4j.core.indicators.SMAIndicator;
+import org.ta4j.core.num.Num;
 
 import javax.mail.MessagingException;
 import java.io.ByteArrayOutputStream;
@@ -79,11 +81,7 @@ public class FVGService {
 
     public FVGObject analysis(FVGRecordDto fvgRecord) {
         FVGObject object = FVGObject.of(fvgRecord);
-        Optional<FavoriteSymbolDto> optionalSymbol = favoriteSymbolRepository.findById(object.getId());
-        if (optionalSymbol.isPresent()) {
-            FavoriteSymbolDto symbolDto = optionalSymbol.get();
-            object.setCategory(symbolDto.getCategory());
-        }
+
         List<Quote> oriQuotes = quoteService.getusQuotesFromSite(new Symbol(object.getId(), object.getName()), "1d", "6mo");
 
         List<Quote> quotes = new ArrayList<>();
@@ -116,8 +114,16 @@ public class FVGService {
         }
         object.setLatestProfit(object.getLatestQuote().getClose() / object.getClose() - 1);
 
+        String oriId = object.getId().split("\\.")[0];
+        Optional<FavoriteSymbolDto> optionalSymbol = favoriteSymbolRepository.findById(oriId);
+        if (optionalSymbol.isPresent()) {
+            FavoriteSymbolDto symbolDto = optionalSymbol.get();
+            object.setCategory(symbolDto.getCategory());
+        }
         //get ma 排序狀況
         this.fetchMaSorting(object, oriQuotes);
+        //Bayesian Trend Indicator
+        this.fetchBayesianTrendIndicator(object, oriQuotes);
         return object;
     }
 
@@ -337,6 +343,15 @@ public class FVGService {
         StringBuilder builder = new StringBuilder();
         map.forEach((value, str) -> builder.append(str + ">"));
         object.setMaSorting(builder.toString());
+        return object;
+    }
+
+    public FVGObject fetchBayesianTrendIndicator(FVGObject object, List<Quote> quotes) {
+
+        BarSeries series = ta4jIndicatorService.transfer(object.getId(), quotes); // Load your BarSeries data here
+        BayesianTrendIndicator indicator = new BayesianTrendIndicator(series, 60, 20, 10);
+        Num trend = indicator.calculateTrend();
+        object.setBayesianTrend(trend.doubleValue());
         return object;
     }
 
