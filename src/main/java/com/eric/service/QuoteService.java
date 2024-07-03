@@ -148,7 +148,7 @@ public class QuoteService {
         return quote;
     }
 
-    @Scheduled(cron = "0 0 15 * * ?")
+    @Scheduled(cron = "0 0 17 * * ?")
     public void scheduleTweDailyQuote() {
         log.info("台股同步批次啟動");
 
@@ -247,7 +247,7 @@ public class QuoteService {
 
     }
 
-    @Scheduled(cron = "0 0 7 * * ?")
+    @Scheduled(cron = "0 0 9 * * ?")
     public void scheduleUSDailyQuote() {
         log.info("美股同步批次啟動");
         List<FavoriteSymbolDto> usSymbols = symbolService.getFavoriteSymbols(SymbolType.US);

@@ -127,7 +127,7 @@ public class FVGService {
         return object;
     }
 
-    @Scheduled(cron = "0 0 14 * * ?")
+    @Scheduled(cron = "0 0 16 * * ?")
     public void scheduleTweFVGStrategy() {
         if (tweFuture != null && !tweFuture.isDone()) {
             return;
@@ -145,7 +145,7 @@ public class FVGService {
             FVGStrategyExcelHandler handler = new FVGStrategyExcelHandler();
             try {
                 ByteArrayOutputStream bos = handler.export(list);
-                MailUtils.generateAndSendEmail(mailConfig, new String[]{"eric3724135@gmail.com"},
+                MailUtils.generateAndSendEmail(mailConfig, mailConfig.getAddressArr(),
                         String.format("%s_台股FVG每日挑檔", LocalDate.now().format(dateFormatter)),
                         String.format("%s_台股FVG每日挑檔", LocalDate.now().format(dateFormatter)),
                         String.format("%s_台股FVG.xlsx", LocalDate.now().format(dateFormatter)), bos);
@@ -173,7 +173,7 @@ public class FVGService {
             FVGStrategyExcelHandler handler = new FVGStrategyExcelHandler();
             try {
                 ByteArrayOutputStream bos = handler.export(list);
-                MailUtils.generateAndSendEmail(mailConfig, new String[]{"eric3724135@gmail.com"},
+                MailUtils.generateAndSendEmail(mailConfig, mailConfig.getAddressArr(),
                         String.format("%s_美股FVG每日挑檔", LocalDate.now().format(dateFormatter)),
                         String.format("%s_美股FVG每日挑檔", LocalDate.now().format(dateFormatter)),
                         String.format("%s_美股FVG.xlsx", LocalDate.now().format(dateFormatter)), bos);
