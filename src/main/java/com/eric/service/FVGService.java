@@ -29,6 +29,7 @@ import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -124,6 +125,11 @@ public class FVGService {
         this.fetchMaSorting(object, oriQuotes);
         //Bayesian Trend Indicator
         this.fetchBayesianTrendIndicator(object, oriQuotes);
+        List<Quote> subList = oriQuotes.subList(0, 30);
+        Double[] closePrices = subList.stream()
+                .map(Quote::getClose)
+                .toArray(Double[]::new);
+        object.setClosePrices(closePrices);
         return object;
     }
 

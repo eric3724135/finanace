@@ -3,6 +3,8 @@ package com.eric.domain;
 import com.eric.persist.pojo.FVGRecordDto;
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 public class FVGObject extends FVGRecordDto {
 
@@ -23,6 +25,8 @@ public class FVGObject extends FVGRecordDto {
     private String category;
 
     private double bayesianTrend;
+
+    private Double[] closePrices; ;
 
 
 
