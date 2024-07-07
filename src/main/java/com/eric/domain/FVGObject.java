@@ -26,7 +26,7 @@ public class FVGObject extends FVGRecordDto {
 
     private double bayesianTrend;
 
-    private Double[] closePrices; ;
+    private String closePrices; ;
 
 
 
