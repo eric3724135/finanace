@@ -27,6 +27,10 @@ public class FVGObject extends FVGRecordDto {
     private double bayesianTrend;
 
     private String closePrices; ;
+    /**
+     * 400張以上大戶比
+     * */
+    private double stockDistribution;
 
 
 

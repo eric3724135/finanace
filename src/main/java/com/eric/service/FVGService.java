@@ -8,9 +8,11 @@ import com.eric.mail.MailUtils;
 import com.eric.persist.pojo.FVGRecordDto;
 import com.eric.persist.pojo.FavoriteSymbolDto;
 import com.eric.persist.pojo.ProfitDto;
+import com.eric.persist.pojo.TdccStockDistribution;
 import com.eric.persist.repo.FVGRecordRepository;
 import com.eric.persist.repo.FavoriteSymbolRepository;
 import com.eric.persist.repo.ProfitRepository;
+import com.eric.persist.repo.TdccStockDistributionRepository;
 import com.eric.strategy.FVGStrategy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,6 +44,8 @@ public class FVGService {
     private QuoteService quoteService;
     @Autowired
     private FavoriteSymbolRepository favoriteSymbolRepository;
+    @Autowired
+    private TdccStockDistributionRepository stockDistributionRepository;
     @Autowired
     private Ta4jIndicatorService ta4jIndicatorService;
     @Autowired
@@ -117,20 +121,20 @@ public class FVGService {
 
         String oriId = object.getId().split("\\.")[0];
         Optional<FavoriteSymbolDto> optionalSymbol = favoriteSymbolRepository.findById(oriId);
+        FavoriteSymbolDto symbolDto = null;
         if (optionalSymbol.isPresent()) {
-            FavoriteSymbolDto symbolDto = optionalSymbol.get();
+            symbolDto = optionalSymbol.get();
             object.setCategory(symbolDto.getCategory());
         }
         //get ma 排序狀況
         this.fetchMaSorting(object, oriQuotes);
         //Bayesian Trend Indicator
         this.fetchBayesianTrendIndicator(object, oriQuotes);
-        List<Quote> subList = oriQuotes.subList(0, 60);
-        Collections.reverse(subList);
-        String closePrices = subList.stream()
-                .map(quote -> String.valueOf(quote.getClose()))
-                .collect(Collectors.joining(", "));
-        object.setClosePrices(closePrices);
+
+        this.fetchClosePrices(object, oriQuotes);
+        if (symbolDto != null && "0".equals(symbolDto.getType())) {
+            this.fetchStockDistribution(symbolDto, object);
+        }
         return object;
     }
 
@@ -376,6 +380,25 @@ public class FVGService {
         record.setDownAvg(record.getDownAvg());
         record.setPosition(result.getPosition().name());
         fvgRecordRepository.save(record);
+    }
+
+    private void fetchClosePrices(FVGObject object, List<Quote> oriQuotes) {
+        List<Quote> subList = oriQuotes.subList(0, 46);
+        Collections.reverse(subList);
+        String closePrices = subList.stream()
+                .map(quote -> String.valueOf(quote.getClose()))
+                .collect(Collectors.joining(", "));
+        object.setClosePrices(closePrices);
+    }
+
+    private void fetchStockDistribution(FavoriteSymbolDto symbolDto, FVGObject object) {
+
+        Optional<TdccStockDistribution> optional = stockDistributionRepository.findById(symbolDto.getId());
+        if (optional.isPresent()) {
+            TdccStockDistribution stockDistribution = optional.get();
+            object.setStockDistribution(stockDistribution.getS400up());
+
+        }
     }
 
 }
