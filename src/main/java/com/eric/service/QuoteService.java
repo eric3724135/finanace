@@ -28,6 +28,7 @@ import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.stream.Collectors;
 
 import static com.eric.domain.SymbolCounter.*;
 import static com.eric.domain.SymbolCounter.usSymbolSize;
@@ -86,6 +87,25 @@ public class QuoteService {
             if (optionalSymbol.isPresent()) {
                 FavoriteSymbolDto symbolDto = optionalSymbol.get();
                 quote.setCategory(symbolDto.getCategory());
+                //---- for closePrices -------
+                List<Quote> oriQuotes = null;
+                if ("0".equals(symbolDto.getType())) {
+                    oriQuotes = this.getusQuotesFromSite(Symbol.ofTW(quoteDto.getSymbol(), quoteDto.getName()), "1d", "6mo");
+                    if (oriQuotes == null || oriQuotes.isEmpty()) {
+                        oriQuotes = this.getusQuotesFromSite(Symbol.ofTWO(quoteDto.getSymbol(), quoteDto.getName()), "1d", "6mo");
+                    }
+                } else {
+                    oriQuotes = this.getusQuotesFromSite(quoteDto.getSymbolObj(), "1d", "6mo");
+
+                }
+
+                List<Quote> subList = oriQuotes.subList(0, oriQuotes.size() > 60 ? 60 : oriQuotes.size());
+                Collections.reverse(subList);
+                String closePrices = subList.stream()
+                        .map(tmpQuote -> String.valueOf(tmpQuote.getClose()))
+                        .collect(Collectors.joining(", "));
+                quote.setClosePrices(closePrices);
+
             }
             results.add(quote);
         });
@@ -224,7 +244,7 @@ public class QuoteService {
             });
             if (!excelQuotes.isEmpty()) {
                 excelQuotes.sort(Comparator.comparing(Quote::getRsi5));
-                for(Quote quote: excelQuotes){
+                for (Quote quote : excelQuotes) {
                     Optional<FavoriteSymbolDto> optionalSymbol = favoriteSymbolRepository.findById(quote.getSymbol());
                     if (optionalSymbol.isPresent()) {
                         FavoriteSymbolDto symbolDto = optionalSymbol.get();
@@ -314,7 +334,7 @@ public class QuoteService {
             });
             if (!excelQuotes.isEmpty()) {
                 excelQuotes.sort(Comparator.comparing(Quote::getRsi5));
-                for(Quote quote: excelQuotes){
+                for (Quote quote : excelQuotes) {
                     Optional<FavoriteSymbolDto> optionalSymbol = favoriteSymbolRepository.findById(quote.getSymbol());
                     if (optionalSymbol.isPresent()) {
                         FavoriteSymbolDto symbolDto = optionalSymbol.get();

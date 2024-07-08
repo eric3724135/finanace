@@ -122,6 +122,11 @@ public class Quote {
      */
     private TLPosition tlPosition;
 
+    /**
+     * 逗號間隔收盤價字串
+     */
+    private String closePrices;
+
 
 //    @Transient
     private DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("MMddHHmm");
