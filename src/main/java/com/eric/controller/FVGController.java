@@ -88,7 +88,7 @@ public class FVGController {
     @PostMapping("/fvg/twe")
     public String fetchTweFVGStrategy(Model model) {
 
-        fvgService.scheduleTweFVGStrategy();
+        fvgService.fetchTweFVGStrategy();
         this.setDefaultModel(model);
         model.addAttribute("symbol", new Symbol());
         SyncResult result = (SyncResult) model.getAttribute("result");
