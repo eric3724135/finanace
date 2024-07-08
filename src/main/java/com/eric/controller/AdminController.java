@@ -1,9 +1,11 @@
 package com.eric.controller;
 
+import com.eric.csv.TdccStockDistributionCsvParser;
 import com.eric.domain.*;
 import com.eric.indicator.BayesianTrendIndicator;
 import com.eric.mail.MailConfig;
 import com.eric.persist.pojo.FavoriteSymbolDto;
+import com.eric.persist.pojo.TdccStockDistribution;
 import com.eric.service.*;
 import com.eric.strategy.FVGStrategy;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +30,8 @@ public class AdminController {
     private AdminService adminService;
     @Autowired
     private SymbolService symbolService;
+    @Autowired
+    private DataService dataService;
     @Autowired
     private Ta4jIndicatorService ta4jIndicatorService;
     @Autowired
@@ -149,13 +153,16 @@ public class AdminController {
 //        fvgService.scheduleTweFVGStrategy();
 
         //-------------------
-        Symbol symbol = new Symbol("6477.tw", "tsmc");
-        List<Quote> quotes = quoteService.getusQuotesFromSite(symbol, "1d", "10y");
-        BarSeries series = ta4jIndicatorService.transfer(symbol.getId(),quotes); // Load your BarSeries data here
-        BayesianTrendIndicator indicator = new BayesianTrendIndicator(series, 60, 20, 10);
+//        Symbol symbol = new Symbol("6477.tw", "tsmc");
+//        List<Quote> quotes = quoteService.getusQuotesFromSite(symbol, "1d", "10y");
+//        BarSeries series = ta4jIndicatorService.transfer(symbol.getId(),quotes); // Load your BarSeries data here
+//        BayesianTrendIndicator indicator = new BayesianTrendIndicator(series, 60, 20, 10);
+//
+//        Num trend = indicator.calculateTrend();
+//        System.out.println("Trend probability: " + trend);
 
-        Num trend = indicator.calculateTrend();
-        System.out.println("Trend probability: " + trend);
+        //------------TdccStockDistributionCsvParser
+        dataService.syncTdccStockDistribution();
 
         //頁面必須回傳值
         this.setDefaultModel(model);
