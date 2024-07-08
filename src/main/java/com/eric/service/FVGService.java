@@ -125,10 +125,11 @@ public class FVGService {
         this.fetchMaSorting(object, oriQuotes);
         //Bayesian Trend Indicator
         this.fetchBayesianTrendIndicator(object, oriQuotes);
-        List<Quote> subList = oriQuotes.subList(0, 30);
-        Double[] closePrices = subList.stream()
-                .map(Quote::getClose)
-                .toArray(Double[]::new);
+        List<Quote> subList = oriQuotes.subList(0, 60);
+        Collections.reverse(subList);
+        String closePrices = subList.stream()
+                .map(quote -> String.valueOf(quote.getClose()))
+                .collect(Collectors.joining(", "));
         object.setClosePrices(closePrices);
         return object;
     }
