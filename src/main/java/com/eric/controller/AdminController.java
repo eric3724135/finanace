@@ -5,6 +5,7 @@ import com.eric.domain.*;
 import com.eric.indicator.BayesianTrendIndicator;
 import com.eric.mail.MailConfig;
 import com.eric.persist.pojo.FavoriteSymbolDto;
+import com.eric.persist.pojo.FvgProfit;
 import com.eric.persist.pojo.TdccStockDistribution;
 import com.eric.service.*;
 import com.eric.strategy.FVGStrategy;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.ta4j.core.BarSeries;
 import org.ta4j.core.num.Num;
 
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 
@@ -162,8 +164,15 @@ public class AdminController {
 //        System.out.println("Trend probability: " + trend);
 
         //------------TdccStockDistributionCsvParser
-        dataService.syncTdccStockDistribution();
+//        dataService.syncTdccStockDistribution();
 
+        //--------------FvgProfit
+        List<FvgProfit> profits = fvgService.getUSProfitReport();
+        for (FvgProfit profit : profits) {
+            log.info("[{}] {} BUY_DATE {} BUY {} SELL_DATE {} SELL {} PROFIT {}",
+                    profit.getId(), profit.getName(), profit.getBuyDate(), profit.getBuyPrice(),
+                    profit.getSellDate(), profit.getSellPrice(), profit.getProfit());
+        }
         //頁面必須回傳值
         this.setDefaultModel(model);
         SyncResult result = (SyncResult) model.getAttribute("result");

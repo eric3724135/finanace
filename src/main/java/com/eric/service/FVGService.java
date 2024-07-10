@@ -5,10 +5,7 @@ import com.eric.excel.FVGStrategyExcelHandler;
 import com.eric.indicator.BayesianTrendIndicator;
 import com.eric.mail.MailConfig;
 import com.eric.mail.MailUtils;
-import com.eric.persist.pojo.FVGRecordDto;
-import com.eric.persist.pojo.FavoriteSymbolDto;
-import com.eric.persist.pojo.ProfitDto;
-import com.eric.persist.pojo.TdccStockDistribution;
+import com.eric.persist.pojo.*;
 import com.eric.persist.repo.FVGRecordRepository;
 import com.eric.persist.repo.FavoriteSymbolRepository;
 import com.eric.persist.repo.ProfitRepository;
@@ -366,8 +363,12 @@ public class FVGService {
         return object;
     }
 
-    public void getProfitReport() {
+    public List<FvgProfit> getTWEProfitReport() {
+        return fvgRecordRepository.getTWEProfitReport();
+    }
 
+    public List<FvgProfit> getUSProfitReport() {
+        return fvgRecordRepository.getUSProfitReport();
     }
 
     private void saveFvgRecord(Symbol symbol, FavoriteSymbolDto favoriteSymbolDto, FVGResult result) {
