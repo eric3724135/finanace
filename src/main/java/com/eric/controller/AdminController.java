@@ -46,7 +46,8 @@ public class AdminController {
     private WessiorFintechService wessiorFintechService;
     @Autowired
     private FVGService fvgService;
-
+    @Autowired
+    private BreakThroughService breakThroughService;
     @Autowired
     private MailConfig mailConfig;
     @Autowired
@@ -167,12 +168,31 @@ public class AdminController {
 //        dataService.syncTdccStockDistribution();
 
         //--------------FvgProfit
-        List<FvgProfit> profits = fvgService.getUSProfitReport();
-        for (FvgProfit profit : profits) {
-            log.info("[{}] {} BUY_DATE {} BUY {} SELL_DATE {} SELL {} PROFIT {}",
-                    profit.getId(), profit.getName(), profit.getBuyDate(), profit.getBuyPrice(),
-                    profit.getSellDate(), profit.getSellPrice(), profit.getProfit());
+//        List<FvgProfit> profits = fvgService.getUSProfitReport();
+//        for (FvgProfit profit : profits) {
+//            log.info("[{}] {} BUY_DATE {} BUY {} SELL_DATE {} SELL {} PROFIT {}",
+//                    profit.getId(), profit.getName(), profit.getBuyDate(), profit.getBuyPrice(),
+//                    profit.getSellDate(), profit.getSellPrice(), profit.getProfit());
+//        }
+
+        //-----------------BreakThroughService
+        List<FavoriteSymbolDto> twList = symbolService.getFavoriteSymbols(SymbolType.TWE);
+
+        for (FavoriteSymbolDto favoriteSymbolDto : twList) {
+            Symbol symbol = Symbol.ofTW(favoriteSymbolDto.getId(), favoriteSymbolDto.getName());
+            List<Quote> quotes = quoteService.getusQuotesFromSite(symbol, "1d", "6mo");
+            if (quotes == null || quotes.isEmpty()) {
+                symbol = Symbol.ofTWO(favoriteSymbolDto.getId(), favoriteSymbolDto.getName());
+                quotes = quoteService.getusQuotesFromSite(symbol, "1d", "6mo");
+            }
+            Collections.reverse(quotes);
+            boolean isTure = breakThroughService.isBreakThrough(quotes);
+            if(isTure){
+                log.info("QQ");
+            }
         }
+
+
         //頁面必須回傳值
         this.setDefaultModel(model);
         SyncResult result = (SyncResult) model.getAttribute("result");
