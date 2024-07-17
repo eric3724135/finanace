@@ -25,11 +25,17 @@
     <label><input type="radio" name="TWE" value="twe" th:field="*{type}"/>台股</label>
     <label><input type="radio" name="US" value="us" th:field="*{type}"/>美股</label>
 </form>
+<form action="#" th:action="@{/fvg/profit}" method="get" th:object="${result}">
+
+    <button type="submit">取得結算</button>
+    <label><input type="radio" name="TWE_CLOSE" value="tweClose" th:field="*{type}"/>台股已實現</label>
+    <label><input type="radio" name="US_CLOSE" value="usClose" th:field="*{type}"/>美股已實現</label>
+</form>
 <div class="col">
 </div>
 <div class="col-lg-10"></div>
 <div>
-    <table class="table table-dark">
+    <table class="table table-dark" th:if="${!fvgs.empty}">
         <thead>
         <tr>
             <th scope="col"> 日期</th>
@@ -84,9 +90,39 @@
         </tbody>
     </table>
 </div>
+
+<div>
+    <table class="table table-dark" th:if="${!profits.empty}">
+        <thead>
+        <tr>
+
+            <th scope="col"> 代號</th>
+            <th scope="col"> 名稱</th>
+            <th scope="col"> 購入日期</th>
+            <th scope="col"> 購入價格</th>
+            <th scope="col"> 售出日期</th>
+            <th scope="col"> 售出價格</th>
+            <th scope="col"> 漲跌</th>
+        </tr>
+        </thead>
+        <tbody>
+
+        <tr th:each="profit : ${profits}">
+            <td th:text="${profit.id}"></td>
+            <td th:text="${profit.name}"></td>
+            <td th:text="${#temporals.format(profit.buyDate, 'yyyy-MM-dd')}"></td>
+            <td th:text="${#numbers.formatDecimal(profit.buyPrice ,0,2)}"></td>
+            <td th:text="${#temporals.format(profit.sellDate, 'yyyy-MM-dd')}"></td>
+            <td th:text="${#numbers.formatDecimal(profit.sellPrice ,0,2)}"></td>
+            <td th:text="${#numbers.formatDecimal(profit.profit/profit.buyPrice*100 ,1,2)}+'%'"
+                th:style="${profit.profit gt 0} ? 'color:red;':'color:green;'"></td>
+        </tr>
+        </tbody>
+    </table>
+</div>
 <script>
-    $(document).ready(function() {
-        $('.sparkline').each(function() {
+    $(document).ready(function () {
+        $('.sparkline').each(function () {
             var values = $(this).attr('data-values').split(',');
             $(this).sparkline(values, {
                 type: 'line',
@@ -95,7 +131,8 @@
                 height: '50px',
                 fillColor: '#000000',
                 lineWidth: 2,
-                spotColor: '#f08000 '});
+                spotColor: '#f08000 '
+            });
         });
     });
 </script>

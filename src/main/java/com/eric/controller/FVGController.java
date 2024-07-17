@@ -5,6 +5,7 @@ import com.eric.domain.FVGPosition;
 import com.eric.domain.Symbol;
 import com.eric.domain.SyncResult;
 import com.eric.persist.pojo.FVGRecordDto;
+import com.eric.persist.pojo.FvgProfit;
 import com.eric.service.FVGService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -56,6 +57,20 @@ public class FVGController {
         }
 
         model.addAttribute("fvgs", analysisList);
+        return "fvg";
+    }
+
+    @GetMapping("/fvg/profit")
+    public String getFvgProfitList(Model model, @RequestParam(required = false, name = "type") String type) {
+        this.setDefaultModel(model);
+        List<FvgProfit> list = new ArrayList<>();
+        if ("tweClose".equals(type)) {
+            list = fvgService.getTWEProfitReport();
+        } else if ("usClose".equals(type)) {
+            list = fvgService.getUSProfitReport();
+        }
+
+        model.addAttribute("profits", list);
         return "fvg";
     }
 
@@ -115,5 +130,6 @@ public class FVGController {
         SyncResult result = new SyncResult();
         model.addAttribute("result", result);
         model.addAttribute("fvgs", new ArrayList<>());
+        model.addAttribute("profits", new ArrayList<>());
     }
 }
