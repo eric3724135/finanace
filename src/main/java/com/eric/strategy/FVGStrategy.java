@@ -93,6 +93,12 @@ public class FVGStrategy {
 //            hst: 计算最近5根K线中的最高值。
 //            lst: 计算最近5根K线中的最低值。
             List<Quote> subList = quotes.subList(i - 5, i);
+            List<Quote> ma20List = quotes.subList(i - 20, i);
+            double ma20 = 0;
+            for (Quote quote : ma20List) {
+                ma20 += quote.getClose();
+            }
+            ma20 = ma20/ma20List.size();
             double hst = 0;
             double lst = 0;
             for (Quote quote : subList) {
@@ -131,12 +137,12 @@ public class FVGStrategy {
             for (FVGBox box : upBoxQueue) {
                 upValuesSum += box.getHigh();
             }
-            upValuesAvg = upValuesSum / upBoxQueue.size();
+            upValuesAvg = (upBoxQueue.isEmpty()) ? 0 : upValuesSum / upBoxQueue.size();
 
             for (FVGBox box : downBoxQueue) {
                 downValuesSum += box.getLow();
             }
-            downValuesAvg = downValuesSum / downBoxQueue.size();
+            downValuesAvg = (downBoxQueue.isEmpty()) ? 0 : downValuesSum / downBoxQueue.size();
 
             log.debug("[{}] {} upAvg {} downAvg {} fvgUp {} fvgDown {} upBoxQueue {} downBoxQueue {}", quotes.get(i).getSymbol(), quotes.get(i).getTradeDateStr(), upValuesAvg, downValuesAvg, fvgUp, fvgDown, upBoxQueue.size(), downBoxQueue.size());
 //            StringBuilder stringBuilder = new StringBuilder();
@@ -153,15 +159,18 @@ public class FVGStrategy {
             if (downValuesAvg > 0 && current.getClose() > downValuesAvg && FVGPosition.EMPTY.equals(lastPosition)) {
                 //當價格突破熊市平均 買入
                 position = FVGPosition.BUY;
+//                log.info("[BUY] {}",current.getTradeDate());
             } else if (FVGPosition.BUY.equals(lastPosition) || FVGPosition.HOLD.equals(lastPosition)) {
                 if (upValuesAvg == 0) {
-                    if(current.getClose() < lst){
-                        //當價格無牛市平均參考 低於5日最低價則賣出
+                    if (current.getClose() < ma20) {
+                        //當價格無牛市平均參考 低於ma20則賣出
+//                        log.info("[SELL] {}",current.getTradeDate());
                         position = FVGPosition.SELL;
                     }
                 } else {
                     if (current.getClose() < upValuesAvg) {
                         //當價格跌破牛市平均 賣出
+//                        log.info("[SELL] {}",current.getTradeDate());
                         position = FVGPosition.SELL;
                     } else {
                         //持有但不到賣出標準
