@@ -251,17 +251,20 @@ public class QuoteService {
                         quote.setCategory(symbolDto.getCategory());
                     }
                 }
-                USStockExcelReportHandler handler = new USStockExcelReportHandler();
-                try {
-                    ByteArrayOutputStream bos = handler.export(excelQuotes);
-                    MailUtils.generateAndSendEmail(mailConfig, mailConfig.getAddressArr(),
-                            String.format("%s_台股每日挑檔", LocalDate.now().format(dateFormatter)),
-                            String.format("%s_台股每日挑檔", LocalDate.now().format(dateFormatter)),
-                            String.format("%s_台股.xlsx", LocalDate.now().format(dateFormatter)), bos);
-                } catch (IOException | MessagingException e) {
-                    log.error("[USStockExcelReportHandler] error ", e);
-                }
             }
+
+            USStockExcelReportHandler handler = new USStockExcelReportHandler();
+            try {
+                ByteArrayOutputStream bos = handler.export(excelQuotes);
+                MailUtils.generateAndSendEmail(mailConfig, mailConfig.getAddressArr(),
+                        String.format("%s_台股每日挑檔", LocalDate.now().format(dateFormatter)),
+                        String.format("%s_台股每日挑檔", LocalDate.now().format(dateFormatter)),
+                        String.format("%s_台股.xlsx", LocalDate.now().format(dateFormatter)), bos);
+            } catch (IOException | MessagingException e) {
+                log.error("[USStockExcelReportHandler] error ", e);
+            }
+            log.info("台股每日挑檔完成");
+
 
         });
 
@@ -341,17 +344,19 @@ public class QuoteService {
                         quote.setCategory(symbolDto.getCategory());
                     }
                 }
-                USStockExcelReportHandler handler = new USStockExcelReportHandler();
-                try {
-                    ByteArrayOutputStream bos = handler.export(excelQuotes);
-                    MailUtils.generateAndSendEmail(mailConfig, mailConfig.getAddressArr(),
-                            String.format("%s_美股每日挑檔", LocalDate.now().format(dateFormatter)),
-                            String.format("%s_美股每日挑檔", LocalDate.now().format(dateFormatter)),
-                            String.format("%s_美股.xlsx", LocalDate.now().format(dateFormatter)), bos);
-                } catch (IOException | MessagingException e) {
-                    log.error("[USStockExcelReportHandler] error ", e);
-                }
             }
+            USStockExcelReportHandler handler = new USStockExcelReportHandler();
+            try {
+                ByteArrayOutputStream bos = handler.export(excelQuotes);
+                MailUtils.generateAndSendEmail(mailConfig, mailConfig.getAddressArr(),
+                        String.format("%s_美股每日挑檔", LocalDate.now().format(dateFormatter)),
+                        String.format("%s_美股每日挑檔", LocalDate.now().format(dateFormatter)),
+                        String.format("%s_美股.xlsx", LocalDate.now().format(dateFormatter)), bos);
+            } catch (IOException | MessagingException e) {
+                log.error("[USStockExcelReportHandler] error ", e);
+            }
+            log.info("美股每日挑檔完成");
+
         });
     }
 
