@@ -93,12 +93,7 @@ public class FVGStrategy {
 //            hst: 计算最近5根K线中的最高值。
 //            lst: 计算最近5根K线中的最低值。
             List<Quote> subList = quotes.subList(i - 5, i);
-            List<Quote> ma20List = quotes.subList(i - 20, i);
-            double ma20 = 0;
-            for (Quote quote : ma20List) {
-                ma20 += quote.getClose();
-            }
-            ma20 = ma20/ma20List.size();
+
             double hst = 0;
             double lst = 0;
             for (Quote quote : subList) {
@@ -161,9 +156,10 @@ public class FVGStrategy {
                 position = FVGPosition.BUY;
 //                log.info("[BUY] {}",current.getTradeDate());
             } else if (FVGPosition.BUY.equals(lastPosition) || FVGPosition.HOLD.equals(lastPosition)) {
-                if (upValuesAvg == 0) {
+                if (upValuesAvg == 0 && i > 20) {
+                    double ma20 = this.getMa20(quotes, i);
                     if (current.getClose() < ma20) {
-                        //當價格無牛市平均參考 低於ma20則賣出
+                        //當價格無牛市平均參考 低於ma20則賣出0
 //                        log.info("[SELL] {}",current.getTradeDate());
                         position = FVGPosition.SELL;
                     }
@@ -196,5 +192,15 @@ public class FVGStrategy {
         log.info("[{}]  End", symbol);
 
         return results;
+    }
+
+    private double getMa20(List<Quote> quotes, int i) {
+        List<Quote> ma20List = quotes.subList(i - 20, i);
+        double ma20 = 0;
+        for (Quote quote : ma20List) {
+            ma20 += quote.getClose();
+        }
+        ma20 = ma20 / ma20List.size();
+        return ma20;
     }
 }
