@@ -45,6 +45,8 @@ public class AdminController {
     @Autowired
     private WessiorFintechService wessiorFintechService;
     @Autowired
+    private RsiCalService rsiCalService;
+    @Autowired
     private FVGService fvgService;
     @Autowired
     private BreakThroughService breakThroughService;
@@ -176,21 +178,25 @@ public class AdminController {
 //        }
 
         //-----------------BreakThroughService
-        List<FavoriteSymbolDto> twList = symbolService.getFavoriteSymbols(SymbolType.TWE);
+//        List<FavoriteSymbolDto> twList = symbolService.getFavoriteSymbols(SymbolType.TWE);
+//
+//        for (FavoriteSymbolDto favoriteSymbolDto : twList) {
+//            Symbol symbol = Symbol.ofTW(favoriteSymbolDto.getId(), favoriteSymbolDto.getName());
+//            List<Quote> quotes = quoteService.getusQuotesFromSite(symbol, "1d", "6mo");
+//            if (quotes == null || quotes.isEmpty()) {
+//                symbol = Symbol.ofTWO(favoriteSymbolDto.getId(), favoriteSymbolDto.getName());
+//                quotes = quoteService.getusQuotesFromSite(symbol, "1d", "6mo");
+//            }
+//            Collections.reverse(quotes);
+//            boolean isTure = breakThroughService.isBreakThrough(quotes);
+//            if(isTure){
+//                log.info("QQ");
+//            }
+//        }
 
-        for (FavoriteSymbolDto favoriteSymbolDto : twList) {
-            Symbol symbol = Symbol.ofTW(favoriteSymbolDto.getId(), favoriteSymbolDto.getName());
-            List<Quote> quotes = quoteService.getusQuotesFromSite(symbol, "1d", "6mo");
-            if (quotes == null || quotes.isEmpty()) {
-                symbol = Symbol.ofTWO(favoriteSymbolDto.getId(), favoriteSymbolDto.getName());
-                quotes = quoteService.getusQuotesFromSite(symbol, "1d", "6mo");
-            }
-            Collections.reverse(quotes);
-            boolean isTure = breakThroughService.isBreakThrough(quotes);
-            if(isTure){
-                log.info("QQ");
-            }
-        }
+        //-----------------Rsi Analysis
+       List<Quote> quotes = rsiCalService.analysisSymbolRsiAvg("2330");
+        log.info("QQ");
 
 
         //頁面必須回傳值

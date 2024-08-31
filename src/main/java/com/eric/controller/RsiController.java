@@ -100,8 +100,8 @@ public class RsiController {
         List<Quote> quotes = quoteService.getTweQuotesFromSite(symbol);
         if (quotes == null || quotes.isEmpty()) {
             quotes = quoteService.getusQuotesFromSite(symbol,"1d","6mo");
-            quotes = analysisService.handleRSI(symbol, quotes, 6);
-            quotes = analysisService.handleRSI(symbol, quotes, 24);
+            quotes = analysisService.handleRSI(symbol, quotes, 6, true);
+            quotes = analysisService.handleRSI(symbol, quotes, 24, true);
         }
         List<Quote> result = quotes.subList(0, quotes.size() > 30 ? 30 : quotes.size() - 1);
         model.addAttribute("quotes", result);

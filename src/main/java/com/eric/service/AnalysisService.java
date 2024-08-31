@@ -18,7 +18,7 @@ import java.util.List;
 @Service
 public class AnalysisService {
 
-    public List<Quote> handleRSI(Symbol symbol, List<Quote> quotes, int rsiValue) {
+    public List<Quote> handleRSI(Symbol symbol, List<Quote> quotes, int rsiValue, boolean limited) {
         BarSeries series = new BaseBarSeriesBuilder().withName(symbol.getId()).build();
         Collections.reverse(quotes);
         quotes.forEach(cmQuote -> {
@@ -34,7 +34,10 @@ public class AnalysisService {
         });
         ClosePriceIndicator closePrice = new ClosePriceIndicator(series);
         RSIIndicator rsiIndicator = new RSIIndicator(closePrice, rsiValue);
-        int limit = series.getBarCount() < 31 ? 0 : series.getBarCount() - 31;
+        int limit = 0;
+        if (limited) {
+            limit = series.getBarCount() < 31 ? 0 : series.getBarCount() - 31;
+        }
         for (int i = series.getBarCount() - 1; i > limit; i--) {
             Quote quote = quotes.get(i);
             try {

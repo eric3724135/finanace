@@ -211,13 +211,13 @@ public class QuoteService {
                             boolean isExist = this.getQuoteExist(quote.getSymbol(), quote.getTradeDate());
                             if (!isExist) {
                                 // rsi 24 week rsi6
-                                this.analysisService.handleRSI(symbol.getSymbolObj(), quotes, 24);
+                                this.analysisService.handleRSI(symbol.getSymbolObj(), quotes, 24, true);
                                 List<Quote> weekQuotes = this.getusQuotesFromSite(Symbol.ofTW(symbol.getId(), symbol.getName()), "1wk", "1y");
                                 if (weekQuotes == null || weekQuotes.isEmpty()) {
                                     weekQuotes = this.getusQuotesFromSite(Symbol.ofTWO(symbol.getId(), symbol.getName()), "1wk", "1y");
                                 }
                                 if (weekQuotes != null && weekQuotes.size() > 30) {
-                                    this.analysisService.handleRSI(symbol.getSymbolObj(), weekQuotes, 6);
+                                    this.analysisService.handleRSI(symbol.getSymbolObj(), weekQuotes, 6, true);
                                     //不調整欄位借用kd diff來存週
                                     Quote latestWeekQuote = weekQuotes.get(0);
                                     quote.setKdDiff(latestWeekQuote.getRsi5());
@@ -299,8 +299,8 @@ public class QuoteService {
                         return;
                     }
 
-                    this.analysisService.handleRSI(usSymbol.getSymbolObj(), quotes, 6);
-                    this.analysisService.handleRSI(usSymbol.getSymbolObj(), quotes, 24);
+                    this.analysisService.handleRSI(usSymbol.getSymbolObj(), quotes, 6, true);
+                    this.analysisService.handleRSI(usSymbol.getSymbolObj(), quotes, 24, true);
 
                     this.indicatorService.fillMa120Value(usSymbol.getId(), quotes);
 
@@ -310,7 +310,7 @@ public class QuoteService {
                             boolean isExist = this.getQuoteExist(quote.getSymbol(), quote.getTradeDate());
                             if (!isExist) {
                                 List<Quote> weekQuotes = this.getusQuotesFromSite(usSymbol.getSymbolObj(), "1wk", "1y");
-                                this.analysisService.handleRSI(usSymbol.getSymbolObj(), weekQuotes, 6);
+                                this.analysisService.handleRSI(usSymbol.getSymbolObj(), weekQuotes, 6, true);
                                 TLPosition position = null;
                                 try {
                                     position = wessiorService.getTLStatus(quote.getSymbolObj(), today);
