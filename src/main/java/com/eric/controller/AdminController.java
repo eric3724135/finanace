@@ -195,8 +195,19 @@ public class AdminController {
 //        }
 
         //-----------------Rsi Analysis
-       List<Quote> quotes = rsiCalService.analysisSymbolRsiAvg("2330");
-        log.info("QQ");
+//       List<Quote> quotes = rsiCalService.analysisSymbolRsiAvg("2330");
+//        log.info("QQ");
+
+        //-----------------cupAndHandle Analysis
+        List<FavoriteSymbolDto> twList = symbolService.getFavoriteSymbols(SymbolType.TWE);
+//
+        for (FavoriteSymbolDto favoriteSymbolDto : twList) {
+//            Symbol symbol = Symbol.ofTW(favoriteSymbolDto.getId(), favoriteSymbolDto.getName());
+            List<Quote> cupQuotes = strategyService.analysisCupAndHandle(favoriteSymbolDto.getId());
+            if(!cupQuotes.isEmpty()){
+                log.info("QQ");
+            }
+        }
 
 
         //頁面必須回傳值
