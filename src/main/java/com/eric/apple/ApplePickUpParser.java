@@ -5,6 +5,7 @@ import com.eric.parser.ParserResult;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import lombok.Data;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Connection;
@@ -20,13 +21,16 @@ import java.security.NoSuchAlgorithmException;
 import java.security.cert.X509Certificate;
 
 @Slf4j
+@Data
 public class ApplePickUpParser implements Parser<String> {
     //TODO 改用AppleGroupPickUpParser service
 //    private static final String URL_TEMPLATE = "https://www.apple.com/tw/shop/fulfillment-messages?store=R713&little=false&mt=regular&parts.0=%s";
     private static final String URL_TEMPLATE = "https://www.apple.com/tw/shop/fulfillment-messages?pl=true&mts.0=compact&parts.0=%s&searchNearby=true&store=R713";
 
 
-    public static final String postUrl = "";
+    private String hookUrl = "";
+
+    private String barkUrl = "";
 
     private String url;
     private String prodKey;
@@ -35,9 +39,11 @@ public class ApplePickUpParser implements Parser<String> {
     private boolean isNotice = false;
 
 
-    public ApplePickUpParser(String prodKey, String prodName) {
+    public ApplePickUpParser(String prodKey, String prodName, String hookUrl, String barkUrl) {
         this.prodKey = prodKey;
         this.prodName = prodName;
+        this.barkUrl = barkUrl;
+        this.hookUrl = hookUrl;
         this.handleUrl(prodKey);
     }
 
@@ -64,12 +70,12 @@ public class ApplePickUpParser implements Parser<String> {
                     JsonNode prodNode = storeNode.get("partsAvailability").get(prodKey);
                     boolean canPick = prodNode.get("messageTypes").get("compact").get("storeSelectionEnabled").asBoolean();
                     if (canPick) {
-//                        String url = String.format(postUrl, prodName + " 有貨囉!!");
-//                        Jsoup.connect(url)
-//                                .sslSocketFactory(socketFactory())
-//                                .ignoreContentType(true).execute();
+                        String url = String.format(hookUrl, prodName + " 有貨囉!!");
+                        Jsoup.connect(url)
+                                .sslSocketFactory(socketFactory())
+                                .ignoreContentType(true).execute();
                         // IOS APP【BARK】
-                        Jsoup.connect("" + prodName + " 有貨囉!!")
+                        Jsoup.connect(barkUrl + prodName + " 有貨囉!!")
                                 .sslSocketFactory(socketFactory())
                                 .ignoreContentType(true).execute();
                     }

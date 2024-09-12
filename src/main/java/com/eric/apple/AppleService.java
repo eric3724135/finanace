@@ -2,6 +2,7 @@ package com.eric.apple;
 
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.net.ssl.SSLContext;
@@ -13,16 +14,20 @@ import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.X509Certificate;
 import java.util.*;
+
 @Slf4j
 @Service
 public class AppleService {
 
     private static final String URL_TEMPLATE = "https://www.apple.com/tw/shop/fulfillment-messages?pl=true&mts.0=compact&parts.0=%s&searchNearby=true&store=R713";
-    public static final String postUrl = "https://maker.ifttt.com/trigger/line/with/key/OE-dwLxAql0X6sh85didv?value1=%s";
 
-    public void start(){
+    @Autowired
+    private HookConfig hookConfig;
+
+
+    public void start() {
         Map<String, String> prodMap = new HashMap<>();
-        prodMap.put("MYT33TA/A","test");
+        prodMap.put("MYT33TA/A", "test");
 //        prodMap.put("MYNJ3ZP/A","16 pro 256 白");
 //        prodMap.put("MYNK3ZP/A","16 pro 256 沙");
 //        prodMap.put("MYWX3ZP/A","16 max 256 沙");
@@ -40,7 +45,7 @@ public class AppleService {
         for (Map.Entry<String, String> prod : params.entrySet()) {
             prodKeys.add(prod.getKey());
         }
-        AppleGroupPickUpParser pickUpParser = new AppleGroupPickUpParser(params);
+        AppleGroupPickUpParser pickUpParser = new AppleGroupPickUpParser(params, hookConfig.getMake(), hookConfig.getBark());
 
         Calendar cal = Calendar.getInstance();
         cal.add(Calendar.HOUR_OF_DAY, 1);
@@ -48,7 +53,7 @@ public class AppleService {
             log.info("查詢開始 {}", new Date());
             Calendar current = Calendar.getInstance();
             if (current.after(cal)) {
-                String url = String.format(postUrl, " APPLE 服務還活著！！");
+                String url = String.format(hookConfig.getMake(), " APPLE 服務還活著！！");
                 try {
                     Jsoup.connect(url)
                             .sslSocketFactory(socketFactory())
