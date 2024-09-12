@@ -1,5 +1,6 @@
 package com.eric.controller;
 
+import com.eric.apple.AppleService;
 import com.eric.csv.TdccStockDistributionCsvParser;
 import com.eric.domain.*;
 import com.eric.indicator.BayesianTrendIndicator;
@@ -28,6 +29,8 @@ import java.util.List;
 @Controller
 public class AdminController {
 
+    @Autowired
+    private AppleService appleService;
     @Autowired
     private AdminService adminService;
     @Autowired
@@ -199,15 +202,17 @@ public class AdminController {
 //        log.info("QQ");
 
         //-----------------cupAndHandle Analysis
-        List<FavoriteSymbolDto> twList = symbolService.getFavoriteSymbols(SymbolType.TWE);
-//
-        for (FavoriteSymbolDto favoriteSymbolDto : twList) {
-//            Symbol symbol = Symbol.ofTW(favoriteSymbolDto.getId(), favoriteSymbolDto.getName());
-            List<Quote> cupQuotes = strategyService.analysisCupAndHandle(favoriteSymbolDto.getId());
-            if(!cupQuotes.isEmpty()){
-                log.info("QQ");
-            }
-        }
+//        List<FavoriteSymbolDto> twList = symbolService.getFavoriteSymbols(SymbolType.TWE);
+////
+//        for (FavoriteSymbolDto favoriteSymbolDto : twList) {
+////            Symbol symbol = Symbol.ofTW(favoriteSymbolDto.getId(), favoriteSymbolDto.getName());
+//            List<Quote> cupQuotes = strategyService.analysisCupAndHandle(favoriteSymbolDto.getId());
+//            if(!cupQuotes.isEmpty()){
+//                log.info("QQ");
+//            }
+//        }
+
+        appleService.start();
 
 
         //頁面必須回傳值
