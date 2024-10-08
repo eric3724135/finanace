@@ -33,16 +33,18 @@ public class AppleGroupPickUpParser implements Parser<String> {
     private String hookUrl = "";
 
     private String barkUrl = "";
+    private String discordUrl = "";
 
     private String url;
     private final Map<String, String> params;
     private final boolean isNotice = false;
 
 
-    public AppleGroupPickUpParser(Map<String, String> params, String hookUrl, String barkUrl) {
+    public AppleGroupPickUpParser(Map<String, String> params, String hookUrl, String barkUrl, String discordUrl) {
         this.params = params;
         this.barkUrl = barkUrl;
         this.hookUrl = hookUrl;
+        this.discordUrl = discordUrl;
         this.handleUrl(new ArrayList<>(params.keySet()));
     }
 
@@ -70,10 +72,13 @@ public class AppleGroupPickUpParser implements Parser<String> {
                     for (String prodKey : params.keySet()) {
                         boolean canPick = prodsNode.get(prodKey).get("messageTypes").get("compact").get("storeSelectionEnabled").asBoolean();
                         if (canPick) {
-                            String url = String.format(hookUrl, params.get(prodKey) + " 有貨囉!!");
-                            Jsoup.connect(url)
-                                    .sslSocketFactory(socketFactory())
-                                    .ignoreContentType(true).execute();
+//                            String url = String.format(hookUrl, params.get(prodKey) + " 有貨囉!!");
+//                            Jsoup.connect(url)
+//                                    .sslSocketFactory(socketFactory())
+//                                    .ignoreContentType(true).execute();
+                            Jsoup.connect(discordUrl)
+                                    .data("content", params.get(prodKey) + " 有貨囉!!")
+                                    .post();
                             Jsoup.connect(barkUrl + params.get(prodKey) + " 有貨囉!!")
                                     .sslSocketFactory(socketFactory())
                                     .ignoreContentType(true).execute();
@@ -93,7 +98,7 @@ public class AppleGroupPickUpParser implements Parser<String> {
 
 
     private void handleUrl(List<String> prodKeys) {
-        String key = "parts.";
+
         StringBuilder builder = new StringBuilder();
         for (int i = 0; i < prodKeys.size(); i++) {
             builder.append(String.format("parts.%s=%s&", i, prodKeys.get(i)));
@@ -101,6 +106,7 @@ public class AppleGroupPickUpParser implements Parser<String> {
 
 
         this.url = String.format(URL_TEMPLATE, builder);
+
     }
 
     public static SSLSocketFactory socketFactory() {
