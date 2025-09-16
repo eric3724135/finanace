@@ -22,10 +22,12 @@ public class AppleScanner {
 
     public static void main(String[] args) {
         Map<String, String> prodMap = new HashMap<>();
-        //prodMap.put("MYNK3ZP/A","16 pro 256 沙");
-        prodMap.put("MYWX3ZP/A", "16 max 256 沙");
-        //prodMap.put("MYWW3ZP/A","16 max 256 白");
-//        prodMap.put("MYWV3ZP/A","16 max 256 黑");
+        prodMap.put("MG8H4ZP/A","17 pro 256 橘");
+        prodMap.put("MG8G4ZP/A", "17 pro 256 銀");
+        prodMap.put("MG8J4ZP/A", "17 pro 256 藍");
+        prodMap.put("MFYN4ZP/A","17 max 256 橘");
+        prodMap.put("MFYM4ZP/A", "17 max 256 銀");
+        prodMap.put("MFYP4ZP/A", "17 max 256 藍");
 
         try {
 
@@ -45,6 +47,13 @@ public class AppleScanner {
 
         Calendar cal = Calendar.getInstance();
         cal.add(Calendar.HOUR_OF_DAY, 1);
+        try {
+            Jsoup.connect(BARK_URL + "偵測啟動!!")
+                    .sslSocketFactory(socketFactory())
+                    .ignoreContentType(true).execute();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         while (true) {
             log.info("查詢開始 {}", new Date());
             Calendar current = Calendar.getInstance();
