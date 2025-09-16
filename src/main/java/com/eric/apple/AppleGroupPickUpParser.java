@@ -76,9 +76,9 @@ public class AppleGroupPickUpParser implements Parser<String> {
 //                            Jsoup.connect(url)
 //                                    .sslSocketFactory(socketFactory())
 //                                    .ignoreContentType(true).execute();
-                            Jsoup.connect(discordUrl)
-                                    .data("content", params.get(prodKey) + " 有貨囉!!")
-                                    .post();
+//                            Jsoup.connect(discordUrl)
+//                                    .data("content", params.get(prodKey) + " 有貨囉!!")
+//                                    .post();
                             Jsoup.connect(barkUrl + params.get(prodKey) + " 有貨囉!!")
                                     .sslSocketFactory(socketFactory())
                                     .ignoreContentType(true).execute();
