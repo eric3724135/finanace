@@ -1,6 +1,5 @@
 package com.eric.controller;
 
-import com.eric.apple.AppleService;
 import com.eric.csv.TdccStockDistributionCsvParser;
 import com.eric.domain.*;
 import com.eric.indicator.BayesianTrendIndicator;
@@ -23,14 +22,14 @@ import org.ta4j.core.num.Num;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 
 @Slf4j
 @Controller
 public class AdminController {
 
-    @Autowired
-    private AppleService appleService;
     @Autowired
     private AdminService adminService;
     @Autowired
@@ -212,7 +211,6 @@ public class AdminController {
 //            }
 //        }
 
-        appleService.start();
 
 
         //頁面必須回傳值
